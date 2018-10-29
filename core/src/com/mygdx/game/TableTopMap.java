@@ -12,6 +12,28 @@ import java.util.List;
  */
 public class TableTopMap implements Screen {
 
+    /**
+     * This method adds a new token to the map
+     *
+     * @param token the token to be added
+     * @param layer the layer to be added to, 0 = map, 1 = blocking, 2 = token
+     */
+    public void addToken(TableTopToken token, int layer) {
+        switch (layer) {
+            case Layer.MAP:
+                this.mapLayerTokens.add(token);
+                break;
+            case Layer.BLOCKING:
+                this.blockingLayerTokens.add(token);
+                break;
+            case Layer.TOKEN:
+                this.tokenLayerTokens.add(token);
+                break;
+        }
+        EngineManager.getMapStage().addActor(token);
+        this.isSaved = false;
+    }
+
     private final MyGdxGame game;
     private String name;
     private boolean isSaved;
@@ -38,26 +60,11 @@ public class TableTopMap implements Screen {
         this.isSaved = false;
     }
 
-    /**
-     * This method adds a new token to the map
-     *
-     * @param token the token to be added
-     * @param layer the layer to be added to, 0 = map, 1 = blocking, 2 = token
-     */
-    public void addToken(TableTopToken token, int layer) {
-        switch (layer) {
-            case 0:
-                this.mapLayerTokens.add(token);
-                break;
-            case 1:
-                this.blockingLayerTokens.add(token);
-                break;
-            case 2:
-                this.tokenLayerTokens.add(token);
-                break;
-        }
-        EngineManager.getMapStage().addActor(token);
-        this.isSaved = false;
+    public class Layer {
+        public static final int MAP = 0;
+        public static final int BLOCKING = 1;
+        public static final int TOKEN = 2;
+
     }
 
     /**

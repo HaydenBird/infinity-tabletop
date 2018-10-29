@@ -23,6 +23,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.kotcrab.vis.ui.widget.*;
 import com.kotcrab.vis.ui.widget.tabbedpane.TabbedPane;
+import com.mygdx.game.MyGdxGame;
 import com.mygdx.game.TableTopMap;
 import com.mygdx.tabletop.Entry;
 import com.mygdx.tabletop.Npc;
@@ -39,6 +40,7 @@ public class UIManager {
     private static Menu fileMenu;
     private static Menu tokenMenu;
     private static Menu mapMenu;
+    private static MyGdxGame game;
 
     public static Stage getStage() {
         return stage;
@@ -73,6 +75,13 @@ public class UIManager {
 
     }
 
+    public static MyGdxGame getGame() {
+        return game;
+    }
+
+    public static void setGame(MyGdxGame game) {
+        UIManager.game = game;
+    }
 
     private static void buildMapWindow() {
         mapContainer = new Table();
@@ -122,11 +131,7 @@ public class UIManager {
 
         buildFileMenu();
         buildTokenMenu();
-
-        mapMenu = new Menu("Map");
-
-
-        menuBar.addMenu(mapMenu);
+        buildMapMenu();
         container.add(menuBar.getTable()).fill().top().prefHeight(container.getHeight() / 10).colspan(12);
         container.row();
 
@@ -166,6 +171,20 @@ public class UIManager {
         tokenMenu.addItem(new MenuItem("Size"));
         tokenMenu.addItem(new MenuItem("Set entry"));
         menuBar.addMenu(tokenMenu);
+    }
+
+    private static void buildMapMenu() {
+        mapMenu = new Menu("Map");
+        MenuItem addMenu = new MenuItem("New Map", new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                new TableTopMap("New Map", UIManager.getGame(), true);
+            }
+
+        });
+        mapMenu.addItem(addMenu);
+        menuBar.addMenu(mapMenu);
+
     }
 
     private static void buildEntriesBox() {

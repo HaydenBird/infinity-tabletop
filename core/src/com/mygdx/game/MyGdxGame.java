@@ -40,7 +40,7 @@ public class MyGdxGame extends Game {
         renderer = new TableTopRenderer(); //Initialize the renderer
         world = new World(new Vector2(0, 0), true);//Initialize the physics world
         rayHandler = EngineManager.getRayHandler(world); //Initialize and set up the ray handler
-
+        UIManager.setGame(this);
         //Test tokens for the map
         TableTopToken t = new TableTopToken(0, 0 / EngineManager.getRatio(), "assets/badlogic.jpg", EngineManager.getCurrentMap());
         TableTopToken t2 = new TableTopToken(200, -200 / EngineManager.getRatio(), "assets/badlogic.jpg", EngineManager.getCurrentMap());

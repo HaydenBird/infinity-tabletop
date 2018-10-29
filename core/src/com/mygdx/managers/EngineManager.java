@@ -2,6 +2,7 @@ package com.mygdx.managers;
 
 import box2dLight.RayHandler;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -15,6 +16,7 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.kotcrab.vis.ui.VisUI;
 import com.mygdx.game.TableTopMap;
 import com.mygdx.game.TableTopRenderer;
+import com.mygdx.game.TableTopToken;
 import com.mygdx.tabletop.Campaign;
 import com.mygdx.tabletop.Player;
 import sun.security.ssl.Debug;
@@ -33,6 +35,8 @@ public class EngineManager {
     private static UIManager uiManager;
     private static Campaign loadedCampaign;
     private static OrthographicCamera hudCamera;
+    private static InputMultiplexer multiplexer;
+    private static TableTopToken selectedToken;
 
     /**
      * This returns the stage that is used for tokens
@@ -355,5 +359,13 @@ public class EngineManager {
         mapCamera.zoom += 0.02 * distance;
         mapCamera.zoom = MathUtils.clamp(mapCamera.zoom, 0.3f, 4f);
         mapCamera.update();
+    }
+
+    public static TableTopToken getSelectedToken() {
+        return EngineManager.selectedToken;
+    }
+
+    public static void setSelectedToken(TableTopToken a) {
+        EngineManager.selectedToken = a;
     }
 }

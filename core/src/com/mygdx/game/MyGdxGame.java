@@ -3,7 +3,6 @@ package com.mygdx.game;
 import box2dLight.RayHandler;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
@@ -13,11 +12,9 @@ import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.utils.DragListener;
 import com.mygdx.managers.EngineManager;
 import com.mygdx.managers.UIManager;
-import sun.security.ssl.Debug;
 
 /**
  * This is the main class of the program. It handles set up and the render loop
@@ -52,18 +49,7 @@ public class MyGdxGame extends Game {
         t2.enableOmniLight(Color.WHITE, 1000);
         t.createBody(world);
 
-        EngineManager.getMapStage().addListener(new InputListener() { //Add a listener for zooming
-            @Override
-            public boolean scrolled(InputEvent event, float x, float y, int amount) {
-                Debug.println("Scrolled", "x: " + x + ", y: " + y + ", amount: " + amount);
-                if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) { //Zoom if ctrl+scroll
-                    EngineManager.zoomMap(-amount, renderer);
-                } else {//Otherwise pan
-                    EngineManager.translateMap(0, 10 * amount, renderer);
-                }
-                return true;
-            }
-        });
+        EngineManager.getMapStage().addListener(new KeyListener(renderer)); //Add a listener for zooming
         inputMultiplexer.addProcessor(UIManager.getStage()); //Add all the things that need to have inputs handled to the multiplexer
         inputMultiplexer.addProcessor(EngineManager.getMapStage());
         GestureDetector gestureDetector = new GestureDetector(new BackgroundListener(renderer));

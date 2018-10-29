@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -16,10 +17,11 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.kotcrab.vis.ui.widget.VisTree;
+import com.kotcrab.vis.ui.widget.*;
 import com.kotcrab.vis.ui.widget.tabbedpane.TabbedPane;
 import com.mygdx.game.TableTopMap;
 import com.mygdx.tabletop.Entry;
@@ -33,6 +35,10 @@ public class UIManager {
     private static TabbedPane mapPanes;
     private static Table mapContainer;
     private static Table tokenArea;
+    private static MenuBar menuBar;
+    private static Menu fileMenu;
+    private static Menu tokenMenu;
+    private static Menu mapMenu;
 
     public static Stage getStage() {
         return stage;
@@ -110,13 +116,57 @@ public class UIManager {
     }
 
     private static void buildTopRow() {
-        topRow = new Table();
-        colorBackground(topRow, Color.DARK_GRAY);
-        topRow.add(new Label("TopRow", EngineManager.getSkin())).fill();
-        container.add(topRow).fill().top().prefHeight(container.getHeight() / 10).colspan(12);
+        EngineManager.getSkin();
+        menuBar = new MenuBar();
+
+
+        buildFileMenu();
+        buildTokenMenu();
+
+        mapMenu = new Menu("Map");
+
+
+        menuBar.addMenu(mapMenu);
+        container.add(menuBar.getTable()).fill().top().prefHeight(container.getHeight() / 10).colspan(12);
         container.row();
+
     }
 
+    private static void buildFileMenu() {
+        fileMenu = new Menu("File");
+        fileMenu.addItem(new MenuItem("New"));
+        fileMenu.addItem(new MenuItem("Open"));
+        fileMenu.addItem(new MenuItem("Save"));
+        fileMenu.addItem(new MenuItem("Save As"));
+        fileMenu.addSeparator();
+        MenuItem exit = new MenuItem("Exit", new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                System.exit(0);
+            }
+        });
+        exit.setShortcut(Input.Keys.ALT_LEFT, Input.Keys.F4);
+        fileMenu.addItem(exit);
+        menuBar.addMenu(fileMenu);
+    }
+
+    private static void buildTokenMenu() {
+        tokenMenu = new Menu("Token");
+        MenuItem layerSelect = new MenuItem("Layer");
+        PopupMenu layerSubmenu = new PopupMenu();
+        layerSubmenu.addItem(new MenuItem("Map"));
+        layerSubmenu.addItem(new MenuItem("Blocking"));
+        layerSubmenu.addItem(new MenuItem("Token"));
+        layerSelect.setSubMenu(layerSubmenu);
+        tokenMenu.addItem(layerSelect);
+        tokenMenu.addItem(new MenuItem("Copy"));
+        tokenMenu.addItem(new MenuItem("Cut"));
+        tokenMenu.addItem(new MenuItem("Paste"));
+        tokenMenu.addItem(new MenuItem("Change image"));
+        tokenMenu.addItem(new MenuItem("Size"));
+        tokenMenu.addItem(new MenuItem("Set entry"));
+        menuBar.addMenu(tokenMenu);
+    }
 
     private static void buildEntriesBox() {
         entryTree = new VisTree();

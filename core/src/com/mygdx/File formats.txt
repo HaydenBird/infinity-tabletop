@@ -1,0 +1,47 @@
+File formats:
+
+Campaigns (Directory root)
+    Campaign_Name (Folder for a campaign)
+        Assets
+            <image_name>.png
+        players.json
+        maps.json
+        handouts.json
+        chat.json
+        commands.json
+
+
+
+players.json
+{
+    "<player1>": {
+        "displayName" : "zxy",
+        "playerID" : "xxc",
+        "passwordHash" : 112043134
+    }
+    "<player2>": {
+            "displayName" : "zxy",
+            "playerID" : "xxc",
+            "passwordHash" : 112043134
+    }
+    "<player3>": {
+            "displayName" : "zxy",
+            "playerID" : "xxc",
+            "passwordHash" : 112043134
+    }
+
+}
+
+handouts.json
+{
+    "handout" : {
+        "type" : "PlayerCharacter",
+        "name" : "bob",
+        "listOrder" : 1,
+        "owners" : ["1","2"]
+        --------------Type specific data--------------------
+
+
+    }
+
+}

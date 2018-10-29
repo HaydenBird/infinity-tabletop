@@ -13,7 +13,6 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.DragListener;
-import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.mygdx.managers.EngineManager;
 import com.mygdx.tabletop.Entry;
 import sun.security.ssl.Debug;
@@ -33,19 +32,8 @@ public class TableTopToken extends Image {
     private final float DEFAULT_HEIGHT = 70;
     private final int NUMBER_OF_VALUES = 4;
     private final Vector3 position;
-    private Body body;
-    private int layer;
-    private float width;
-    private float height;
-    private TableTopMap parentMap;
-    private Entry linkedEntry;
-    private float[] valuesCurrent;
-    private float[] valuesMax;
-    private ConeLight coneLight;
-    private PointLight omniLight;
-    private boolean omnidirectionalLightOn = false, coneLightOn = false;
-    private String texturePath;
 
+    private final TextureRegion textureRegion;
 
     /**
      * The constructor for a token
@@ -56,10 +44,13 @@ public class TableTopToken extends Image {
      * @param parentMap the map the token is on
      */
     public TableTopToken(float xPos, float yPos, String imagePath, TableTopMap parentMap) {
-        this.setDrawable(new TextureRegionDrawable(new TextureRegion(EngineManager.getTexture(imagePath))));
+        textureRegion = new TextureRegion(EngineManager.getTexture(imagePath));
+        //this.setDrawable(new TextureRegionDrawable(textureRegion);
+        debug();
         valuesCurrent = new float[NUMBER_OF_VALUES];
         valuesMax = new float[NUMBER_OF_VALUES];
         this.parentMap = parentMap;
+        parentMap.addToken(this, TableTopMap.Layer.TOKEN);
         parentMap.setSaved(false);
         this.texturePath = imagePath;
         position = new Vector3(xPos, yPos * EngineManager.getRatio(), 0);
@@ -95,6 +86,23 @@ public class TableTopToken extends Image {
 
         });
 
+    }
+
+    private Body body;
+    private int layer;
+    private float width;
+    private float height;
+    private TableTopMap parentMap;
+    private Entry linkedEntry;
+    private float[] valuesCurrent;
+    private float[] valuesMax;
+    private ConeLight coneLight;
+    private PointLight omniLight;
+    private boolean omnidirectionalLightOn = false, coneLightOn = false;
+    private String texturePath;
+
+    public TextureRegion getTextureRegion() {
+        return textureRegion;
     }
 
     /**
@@ -149,6 +157,12 @@ public class TableTopToken extends Image {
         omniLight.setActive(true);
         omniLight.setSoft(true);
         omnidirectionalLightOn = true;
+    }
+
+    public void disableOmniLight() {
+        if (omniLight != null) {
+            omniLight.setActive(false);
+        }
     }
 
     /**
@@ -218,5 +232,14 @@ public class TableTopToken extends Image {
     }
 
 
+    public PointLight getOmniLight() {
+        return omniLight;
+    }
+
+    public void renableOmniLight() {
+        if (omniLight != null) {
+            omniLight.setActive(true);
+        }
+    }
 }
 

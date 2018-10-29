@@ -1,6 +1,8 @@
 package com.mygdx.game;
 
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.World;
 import com.mygdx.managers.EngineManager;
 import com.mygdx.managers.UIManager;
 
@@ -41,6 +43,26 @@ public class TableTopMap implements Screen {
     private List<TableTopToken> blockingLayerTokens;
     private List<TableTopToken> mapLayerTokens;
 
+    private World world;
+
+    /**
+     * Constructor method
+     *
+     * @param name    The name of the map
+     * @param game    the parent game
+     * @param showTab whether to add the tab to the map tabs list
+     */
+    public TableTopMap(String name, final MyGdxGame game, boolean showTab) {
+        this.game = game;
+        this.name = name;
+        this.world = new World(new Vector2(0, 0), true);
+        this.isSaved = true;
+        tokenLayerTokens = new LinkedList<>();
+        mapLayerTokens = new LinkedList<>();
+        blockingLayerTokens = new LinkedList<>();
+        if (showTab) UIManager.addMap(this);
+    }
+
     /**
      * The name of the map
      *
@@ -76,22 +98,8 @@ public class TableTopMap implements Screen {
         return tokenLayerTokens;
     }
 
-    /**
-     * Constructor method
-     *
-     * @param name    The name of the map
-     * @param game    the parent game
-     * @param showTab whether to add the tab to the map tabs list
-     */
-    public TableTopMap(String name, final MyGdxGame game, boolean showTab) {
-        this.game = game;
-        this.name = name;
-        this.isSaved = true;
-        EngineManager.loadMap(this);
-        tokenLayerTokens = new LinkedList<>();
-        mapLayerTokens = new LinkedList<>();
-        blockingLayerTokens = new LinkedList<>();
-        if (showTab) UIManager.addMap(this);
+    public World getWorld() {
+        return world;
     }
 
     @Override
@@ -111,7 +119,6 @@ public class TableTopMap implements Screen {
 
     @Override
     public void pause() {
-
     }
 
     @Override

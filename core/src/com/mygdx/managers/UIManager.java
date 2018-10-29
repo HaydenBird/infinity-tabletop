@@ -30,7 +30,9 @@ import com.kotcrab.vis.ui.widget.color.ColorPickerAdapter;
 import com.kotcrab.vis.ui.widget.file.FileChooser;
 import com.kotcrab.vis.ui.widget.file.FileChooserAdapter;
 import com.kotcrab.vis.ui.widget.file.FileTypeFilter;
+import com.kotcrab.vis.ui.widget.tabbedpane.Tab;
 import com.kotcrab.vis.ui.widget.tabbedpane.TabbedPane;
+import com.kotcrab.vis.ui.widget.tabbedpane.TabbedPaneAdapter;
 import com.mygdx.game.MyGdxGame;
 import com.mygdx.game.TableTopMap;
 import com.mygdx.game.TableTopToken;
@@ -113,6 +115,14 @@ public class UIManager {
     private static void buildMapWindow() {
         mapContainer = new Table();
         mapPanes = new TabbedPane();
+        mapPanes.addListener(new TabbedPaneAdapter() {
+            @Override
+            public void switchedTab(Tab tab) {
+                super.switchedTab(tab);
+                MapTab newCurrent = (MapTab) tab;
+                EngineManager.setCurrentMap(newCurrent.getMap());
+            }
+        });
         mapPaneWindow = mapPanes.getTable();
         mapContainer.add(mapPaneWindow).growX();
         mapContainer.row();

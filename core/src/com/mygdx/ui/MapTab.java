@@ -32,4 +32,8 @@ public class MapTab extends Tab {
     public Table getContentTable() {
         return content;
     }
+
+    public TableTopMap getMap() {
+        return map;
+    }
 }

@@ -37,6 +37,7 @@ public class EngineManager {
     private static OrthographicCamera hudCamera;
     private static InputMultiplexer multiplexer;
     private static TableTopToken selectedToken;
+    private static World world;
 
     /**
      * This returns the stage that is used for tokens
@@ -68,7 +69,6 @@ public class EngineManager {
         hudCamera = new OrthographicCamera();
         EngineManager.getUiManager();
         UIManager.init();
-
         mapStage = new Stage(new ScreenViewport(), UIManager.getStage().getBatch());
         mapStage.getCamera().viewportHeight = 1000 / getRatio();
         mapStage.getCamera().viewportWidth = 1000;
@@ -309,7 +309,7 @@ public class EngineManager {
             rayHandler.setCombinedMatrix(mapStage.getCamera().combined, 0, 0, 1, 1);
             rayHandler.setShadows(true);
             rayHandler.setCulling(true);
-            //rayHandler.setAmbientLight(0.11f,0.1f,0.1f,0f);
+            rayHandler.setAmbientLight(0.11f, 0.1f, 0.1f, 0f);
             rayHandler.setBlurNum(5);
         }
         return rayHandler;
@@ -367,5 +367,40 @@ public class EngineManager {
 
     public static void setSelectedToken(TableTopToken a) {
         EngineManager.selectedToken = a;
+    }
+
+    public static void setCurrentMap(TableTopMap map) {
+        if (currentMap != null) {
+            for (TableTopToken token : currentMap.getMapLayerTokens()) {
+                token.disableOmniLight();
+            }
+            for (TableTopToken token : currentMap.getTokenLayerTokens()) {
+                token.disableOmniLight();
+            }
+            for (TableTopToken token : currentMap.getBlockingLayerTokens()) {
+                token.disableOmniLight();
+            }
+        }
+        EngineManager.currentMap = map;
+        EngineManager.setWorld(map.getWorld());
+        if (rayHandler != null) {
+            EngineManager.rayHandler.setWorld(map.getWorld());
+        }
+
+        for (TableTopToken token : currentMap.getMapLayerTokens()) {
+            token.renableOmniLight();
+        }
+        for (TableTopToken token : currentMap.getTokenLayerTokens()) {
+            token.renableOmniLight();
+        }
+        for (TableTopToken token : currentMap.getBlockingLayerTokens()) {
+            token.renableOmniLight();
+        }
+
+    }
+
+    public static void setWorld(World world) {
+        EngineManager.world = world;
+
     }
 }

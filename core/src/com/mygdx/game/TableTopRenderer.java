@@ -42,16 +42,34 @@ public class TableTopRenderer {
      *
      * @param rayHandler the ray handler that will handle the lighting
      * @param batch      The batch that will handle rendering the tokens
-     * @param world      the world object that contains the physics objects
      */
-    public void render(RayHandler rayHandler, SpriteBatch batch, World world) {
+    public void render(RayHandler rayHandler, SpriteBatch batch) {
         Stage mapStage = EngineManager.getMapStage();
+        World world = EngineManager.getCurrentMap().getWorld();
         world.step(Gdx.graphics.getDeltaTime(), 6, 2);
         //Render a generic background
         renderGrid(Color.LIGHT_GRAY, Color.RED, 50, 50, batch);
+
         //Render the Map
         mapStage.act();
-        mapStage.draw();
+        TableTopMap currentMap = EngineManager.getCurrentMap();
+        TextureRegion textureRegion;
+        batch.begin();
+        for (TableTopToken token : currentMap.getMapLayerTokens()) {
+            textureRegion = token.getTextureRegion();
+            batch.draw(textureRegion, token.getX(), token.getY(), token.getWidth(), token.getHeight());
+        }
+        for (TableTopToken token : currentMap.getBlockingLayerTokens()) {
+            textureRegion = token.getTextureRegion();
+            batch.draw(textureRegion, token.getX(), token.getY(), token.getWidth(), token.getHeight());
+        }
+        for (TableTopToken token : currentMap.getTokenLayerTokens()) {
+            textureRegion = token.getTextureRegion();
+            batch.draw(textureRegion, token.getX(), token.getY(), token.getWidth(), token.getHeight());
+        }
+        batch.end();
+
+
         //Render lighting
         rayHandler.setCombinedMatrix((OrthographicCamera) mapStage.getCamera());
         rayHandler.updateAndRender();

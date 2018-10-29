@@ -21,6 +21,8 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.kotcrab.vis.ui.util.dialog.Dialogs;
+import com.kotcrab.vis.ui.util.dialog.InputDialogAdapter;
 import com.kotcrab.vis.ui.widget.*;
 import com.kotcrab.vis.ui.widget.tabbedpane.TabbedPane;
 import com.mygdx.game.MyGdxGame;
@@ -183,6 +185,23 @@ public class UIManager {
 
         });
         mapMenu.addItem(addMenu);
+
+        MenuItem renameMenu = new MenuItem("Rename", new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                MapTab tab = (MapTab) mapPanes.getActiveTab();
+                Dialogs.showInputDialog(getStage(), "Rename Map", "Name: ", new InputDialogAdapter() {
+                    @Override
+                    public void finished(String input) {
+                        tab.rename(input);
+                        tab.dirty();
+                    }
+                });
+            }
+
+        });
+        mapMenu.addItem(renameMenu);
+
         menuBar.addMenu(mapMenu);
 
     }

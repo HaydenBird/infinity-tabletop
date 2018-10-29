@@ -11,9 +11,15 @@ public class MapTab extends Tab {
     private TableTopMap map;
 
     public MapTab(String name, TableTopMap map) {
-        super(false, true);
+        super(true, true);
         this.title = name;
         this.map = map;
+
+    }
+
+
+    public void rename(String newTitle) {
+        this.title = newTitle;
     }
 
     @Override

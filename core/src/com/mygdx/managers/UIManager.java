@@ -2,6 +2,7 @@ package com.mygdx.managers;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Pixmap;
@@ -20,13 +21,20 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.kotcrab.vis.ui.util.dialog.Dialogs;
 import com.kotcrab.vis.ui.util.dialog.InputDialogAdapter;
 import com.kotcrab.vis.ui.widget.*;
+import com.kotcrab.vis.ui.widget.color.ColorPicker;
+import com.kotcrab.vis.ui.widget.color.ColorPickerAdapter;
+import com.kotcrab.vis.ui.widget.file.FileChooser;
+import com.kotcrab.vis.ui.widget.file.FileChooserAdapter;
+import com.kotcrab.vis.ui.widget.file.FileTypeFilter;
 import com.kotcrab.vis.ui.widget.tabbedpane.TabbedPane;
 import com.mygdx.game.MyGdxGame;
 import com.mygdx.game.TableTopMap;
+import com.mygdx.game.TableTopToken;
 import com.mygdx.tabletop.Entry;
 import com.mygdx.tabletop.Npc;
 import com.mygdx.tabletop.PlayerCharacter;
@@ -159,6 +167,8 @@ public class UIManager {
 
     private static void buildTokenMenu() {
         tokenMenu = new Menu("Token");
+        createAddTokenButton(tokenMenu);
+        createEnableLightButton(tokenMenu);
         MenuItem layerSelect = new MenuItem("Layer");
         PopupMenu layerSubmenu = new PopupMenu();
         layerSubmenu.addItem(new MenuItem("Map"));
@@ -173,6 +183,83 @@ public class UIManager {
         tokenMenu.addItem(new MenuItem("Size"));
         tokenMenu.addItem(new MenuItem("Set entry"));
         menuBar.addMenu(tokenMenu);
+    }
+
+    private static void createEnableLightButton(Menu tokenMenu) {
+        MenuItem addLight = new MenuItem("Lighting");
+        PopupMenu lightSubMenu = new PopupMenu();
+        MenuItem omniLightButton = new MenuItem("Omnidirectional Light", new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                ColorPicker picker = new ColorPicker(new ColorPickerAdapter() {
+                    @Override
+                    public void finished(Color newColor) {
+                        Dialogs.showInputDialog(getStage(), "Light distance", "Distance: ", new InputDialogAdapter() {
+                            @Override
+                            public void finished(String input) {
+                                EngineManager.getSelectedToken().enableOmniLight(newColor, Integer.parseInt(input));
+                            }
+                        });
+                    }
+                });
+                getStage().addActor(picker);
+            }
+        });
+        lightSubMenu.addItem(omniLightButton);
+        addLight.setSubMenu(lightSubMenu);
+        tokenMenu.addItem(addLight);
+    }
+
+    private static void createAddTokenButton(Menu tokenMenu) {
+        MenuItem newToken = new MenuItem("New");
+        PopupMenu newSubmenu = new PopupMenu();
+        MenuItem addToMap = new MenuItem("Map", new ChangeListener() {
+
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                UIManager.createToken(TableTopMap.Layer.MAP);
+            }
+        });
+
+        MenuItem addToBlocking = new MenuItem("Blocking", new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                UIManager.createToken(TableTopMap.Layer.BLOCKING);
+            }
+        });
+
+        MenuItem addToToken = new MenuItem("Token", new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                UIManager.createToken(TableTopMap.Layer.TOKEN);
+            }
+        });
+        newSubmenu.addItem(addToMap);
+        newSubmenu.addItem(addToBlocking);
+        newSubmenu.addItem(addToToken);
+        newToken.setSubMenu(newSubmenu);
+        tokenMenu.addItem(newToken);
+
+
+    }
+
+    private static void createToken(int map) {
+        FileChooser.setDefaultPrefsName("com.mygdx");
+        FileChooser fileChooser = new FileChooser(FileChooser.Mode.OPEN);
+        fileChooser.setDirectory(Gdx.files.getLocalStoragePath());
+        FileTypeFilter typeFilter = new FileTypeFilter(true);
+        typeFilter.addRule("Image files (*.png, *.jpg, *.gif)", "png", "jpg", "gif");
+        fileChooser.setFileTypeFilter(typeFilter);
+        fileChooser.setSelectionMode(FileChooser.SelectionMode.FILES);
+        fileChooser.setListener(new FileChooserAdapter() {
+            @Override
+            public void selected(Array<FileHandle> file) {
+                TableTopToken newToken = new TableTopToken(0, 0, file.get(0).path(), EngineManager.getCurrentMap());
+                EngineManager.getCurrentMap().addToken(newToken, map);
+            }
+        });
+
+        getStage().addActor(fileChooser.fadeIn());
     }
 
     private static void buildMapMenu() {
@@ -201,6 +288,9 @@ public class UIManager {
 
         });
         mapMenu.addItem(renameMenu);
+
+        MenuItem movePlayer = new MenuItem("Move players to current map");
+        mapMenu.addItem(movePlayer);
 
         menuBar.addMenu(mapMenu);
 

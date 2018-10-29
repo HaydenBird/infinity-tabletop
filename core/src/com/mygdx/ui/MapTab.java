@@ -20,6 +20,7 @@ public class MapTab extends Tab {
 
     public void rename(String newTitle) {
         this.title = newTitle;
+        map.setName(newTitle);
     }
 
     @Override

@@ -50,7 +50,6 @@ public class TableTopRenderer {
         //Render a generic background
         renderGrid(Color.LIGHT_GRAY, Color.RED, 50, 50, batch);
         //Render the Map
-
         mapStage.act();
         mapStage.draw();
         //Render lighting

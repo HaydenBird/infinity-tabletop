@@ -9,7 +9,6 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
@@ -39,30 +38,29 @@ import com.mygdx.tabletop.Entry;
 import com.mygdx.tabletop.Npc;
 import com.mygdx.tabletop.PlayerCharacter;
 import com.mygdx.ui.MapTab;
-import sun.security.ssl.Debug;
 
+/**
+ * This class handles the creation of all the HUD elements, accessing them, and the methods that they rely on.
+ */
 public class UIManager {
 
-    private static TabbedPane mapPanes;
-    private static Table mapContainer;
+    private static TabbedPane mapPanes; //The tabbed pane used to swap between maps
+    private static Table mapContainer; //An empty table used to create the hole in the hud in which we can view the map
     private static Table tokenArea;
-    private static MenuBar menuBar;
+    private static MyGdxGame game; //The instance of the game
+
+    private static MenuBar menuBar; //The menu bar
     private static Menu fileMenu;
     private static Menu tokenMenu;
     private static Menu mapMenu;
-    private static MyGdxGame game;
 
-    public static Stage getStage() {
-        return stage;
-    }
 
-    private static Stage stage;
-    private static OrthographicCamera camera;
-    private static Table container;
+    private static Stage stage; //The Stage on which all the HUD elements are added
+    private static OrthographicCamera camera; //
+    private static Table container; //The container for the HUD
 
-    private static Table topRow;
-    private static ScrollPane entryList;
-    private static Table chatLog;
+    private static ScrollPane entryList; // The list of entires on the left
+    private static Table chatLog; //Chat log
     private static TabbedPane.TabbedPaneTable mapPaneWindow;
     private static Table entryContainer;
 
@@ -71,8 +69,10 @@ public class UIManager {
     private static VisTree.Node npcNode;
     private static VisTree.Node handoutNode;
 
+    /**
+     * This method is used to build the UI and set up the stage
+     */
     public static void init() {
-        //TODO: Build the base UI
         camera = EngineManager.getCamera();
         stage = new Stage(new ScreenViewport(camera));
 
@@ -85,14 +85,31 @@ public class UIManager {
 
     }
 
+    /**
+     * @return the UI stage
+     */
+    public static Stage getStage() {
+        return stage;
+    }
+
+    /**
+     * @return the game
+     */
     public static MyGdxGame getGame() {
         return game;
     }
 
+    /**
+     * Sets the game
+     * @param game the game
+     */
     public static void setGame(MyGdxGame game) {
         UIManager.game = game;
     }
 
+    /**
+     * This method builds the tabbed pane and empty window in the middle of the UI
+     */
     private static void buildMapWindow() {
         mapContainer = new Table();
         mapPanes = new TabbedPane();
@@ -105,16 +122,29 @@ public class UIManager {
 
     }
 
+    /**
+     * This method changes edits a scrollpane style to have no border
+     * @param style the style to be edited
+     */
     public static void scrollPaneLayout(ScrollPane.ScrollPaneStyle style) {
         TextureAtlas atlas = EngineManager.getAtlas();
         style.background = new TextureRegionDrawable(atlas.findRegion("window-noborder"));
     }
 
-
+    /**
+     * This method takes a table and gives it a background of a chosen color
+     * @param a the table
+     * @param c the color
+     */
     public static void colorBackground(Table a, Color c) {
         a.setBackground(makeBackground(c));
     }
 
+    /**
+     * This method creates a 1x1 texture of a color
+     * @param c the color
+     * @return the texture
+     */
     public static TextureRegion makeFlatColor(Color c) {
         Pixmap bgPixmap = new Pixmap(1, 1, Pixmap.Format.RGB565);
         bgPixmap.setColor(c);
@@ -124,16 +154,27 @@ public class UIManager {
         return textureRegion;
     }
 
+    /**
+     * This method creates a 1x1 drawable of a given color
+     * @param c the color
+     * @return the drawable
+     */
     public static Drawable makeBackground(Color c) {
         return new TextureRegionDrawable(makeFlatColor(c));
     }
 
+    /**
+     * This method sets up the container
+     */
     private static void buildFrame() {
         container = new Table();
         container.setFillParent(true);
         stage.addActor(container);
     }
 
+    /**
+     * This method creates the menu bar
+     */
     private static void buildTopRow() {
         EngineManager.getSkin();
         menuBar = new MenuBar();
@@ -147,6 +188,9 @@ public class UIManager {
 
     }
 
+    /**
+     * This method populates the file menu option
+     */
     private static void buildFileMenu() {
         fileMenu = new Menu("File");
         fileMenu.addItem(new MenuItem("New"));
@@ -165,6 +209,9 @@ public class UIManager {
         menuBar.addMenu(fileMenu);
     }
 
+    /**
+     * This method populates the token menu option
+     */
     private static void buildTokenMenu() {
         tokenMenu = new Menu("Token");
         createAddTokenButton(tokenMenu);
@@ -185,6 +232,9 @@ public class UIManager {
         menuBar.addMenu(tokenMenu);
     }
 
+    /**
+     * This method creates the enable light button
+     */
     private static void createEnableLightButton(Menu tokenMenu) {
         MenuItem addLight = new MenuItem("Lighting");
         PopupMenu lightSubMenu = new PopupMenu();
@@ -210,6 +260,10 @@ public class UIManager {
         tokenMenu.addItem(addLight);
     }
 
+    /**
+     * This method creates the submenu to create a token
+     * @param tokenMenu the menu toadd the submenu to
+     */
     private static void createAddTokenButton(Menu tokenMenu) {
         MenuItem newToken = new MenuItem("New");
         PopupMenu newSubmenu = new PopupMenu();
@@ -243,7 +297,11 @@ public class UIManager {
 
     }
 
-    private static void createToken(int map) {
+    /**
+     * This method takes a layer and prompts the user for an image file, it then creates a token centred on the screen
+     * @param layer the layer to add the token to
+     */
+    private static void createToken(int layer) {
         FileChooser.setDefaultPrefsName("com.mygdx");
         FileChooser fileChooser = new FileChooser(FileChooser.Mode.OPEN);
         fileChooser.setDirectory(Gdx.files.getLocalStoragePath());
@@ -254,14 +312,17 @@ public class UIManager {
         fileChooser.setListener(new FileChooserAdapter() {
             @Override
             public void selected(Array<FileHandle> file) {
-                TableTopToken newToken = new TableTopToken(0, 0, file.get(0).path(), EngineManager.getCurrentMap());
-                EngineManager.getCurrentMap().addToken(newToken, map);
+                TableTopToken newToken = new TableTopToken(EngineManager.getMapStage().getCamera().position.x, EngineManager.getMapStage().getCamera().position.y,
+                        file.get(0).path(), EngineManager.getCurrentMap());
+                EngineManager.getCurrentMap().addToken(newToken, layer);
             }
         });
-
         getStage().addActor(fileChooser.fadeIn());
     }
 
+    /**
+     * This method builds the Map menu option
+     */
     private static void buildMapMenu() {
         mapMenu = new Menu("Map");
         MenuItem addMenu = new MenuItem("New Map", new ChangeListener() {
@@ -296,6 +357,9 @@ public class UIManager {
 
     }
 
+    /**
+     * This method builds the e ntry box
+     */
     private static void buildEntriesBox() {
         entryTree = new VisTree();
         entryList = new ScrollPane(entryTree, EngineManager.getSkin().get(ScrollPane.ScrollPaneStyle.class));
@@ -313,7 +377,9 @@ public class UIManager {
 
     }
 
-
+    /**
+     * This method creates the chat box
+     */
     private static void buildChatBox() {
         chatLog = new Table();
         Table chatContainer = new Table();
@@ -350,14 +416,10 @@ public class UIManager {
 
     }
 
-    private static void buildToolBox() {
-
-    }
-
-    private static void buildDropdownMenus() {
-
-    }
-
+    /**
+     * This method adds an entry to the list of entries under the entries tree
+     * @param entry the entry to add
+     */
     public static void addEntry(Entry entry) {
         switch (entry.getEntryType()) {
             case "PlayerCharacter":
@@ -373,6 +435,11 @@ public class UIManager {
 
     }
 
+    /**
+     * This method adds an entry as a child of an existing entry, which must be a PC
+     * @param character the entry that will have the child
+     * @param entry the child
+     */
     public static void addSubentry(PlayerCharacter character, Entry entry) {
         if (entry.getEntryType().equals("PlayerCharacter") || entry.getEntryType().equals("Npc")) return;
         for (VisTree.Node node : pcNode.getChildren()) {
@@ -380,6 +447,12 @@ public class UIManager {
         }
     }
 
+
+    /**
+     * This method adds an entry as a child of an existing entry, which must be a NPC
+     * @param character the entry that will have the child
+     * @param entry the child
+     */
     public static void addSubentry(Npc character, Entry entry) {
         if (entry.getEntryType().equals("PlayerCharacter") || entry.getEntryType().equals("Npc")) return;
         for (VisTree.Node node : npcNode.getChildren()) {
@@ -387,21 +460,11 @@ public class UIManager {
         }
     }
 
+    /**
+     * This method adds a map to the tabs
+     * @param tableTopMap the map to add
+     */
     public static void addMap(TableTopMap tableTopMap) {
         mapPanes.add(new MapTab(tableTopMap.getName(), tableTopMap));
-    }
-
-
-    public static Vector2 getTokenAreaCoords() {
-        Vector2 coord = new Vector2(0, 0);
-        tokenArea.localToStageCoordinates(coord);
-        tokenArea.getStage().stageToScreenCoordinates(coord);
-        Debug.println("Debug", "(" + coord.x + "," + coord.y + ")");
-        return coord;
-    }
-
-
-    public static Table getTokenArea() {
-        return tokenArea;
     }
 }

@@ -22,9 +22,9 @@ public class EntryTest {
 
     @Test
     public void getListOrder() {
-        Entry e1 = new Entry();
-        Entry e2 = new Entry();
-        Entry e3 = new Entry();
+        Entry e1 = new Entry("", EngineManager.getSkin());
+        Entry e2 = new Entry("", EngineManager.getSkin());
+        Entry e3 = new Entry("", EngineManager.getSkin());
         assertEquals(e1.getListOrder(), 0);
         assertEquals(e2.getListOrder(), 1);
         assertEquals(e3.getListOrder(), 2);
@@ -32,9 +32,9 @@ public class EntryTest {
 
     @Test
     public void setListOrder() {
-        Entry e1 = new Entry();
-        Entry e2 = new Entry();
-        Entry e3 = new Entry();
+        Entry e1 = new Entry("", EngineManager.getSkin());
+        Entry e2 = new Entry("", EngineManager.getSkin());
+        Entry e3 = new Entry("", EngineManager.getSkin());
         e3.setListOrder(0);
         e1.setListOrder(2);
         assertEquals(e1.getListOrder(), 2);
@@ -44,7 +44,7 @@ public class EntryTest {
 
     @Test
     public void OwnersTest() {
-        Entry e1 = new Entry();
+        Entry e1 = new Entry("", EngineManager.getSkin());
         Player p1 = new Player("1", "1", null);
         Player p2 = new Player("2", "2", null);
         Player p3 = new Player("2", "2", null);
@@ -57,12 +57,12 @@ public class EntryTest {
 
     @Test
     public void getEntryType() {
-        Handout h1 = new Handout();
-        Item i1 = new Item();
-        PlayerCharacter p1 = new PlayerCharacter();
-        Boon b1 = new Boon();
-        Entry e1 = new Entry();
-        Npc n1 = new Npc();
+        Handout h1 = new Handout("", EngineManager.getSkin());
+        Item i1 = new Item("", EngineManager.getSkin());
+        PlayerCharacter p1 = new PlayerCharacter("", EngineManager.getSkin());
+        Boon b1 = new Boon("", EngineManager.getSkin());
+        Entry e1 = new Entry("", EngineManager.getSkin());
+        Npc n1 = new Npc("", EngineManager.getSkin());
         assertEquals(h1.getEntryType(), "Handout");
         assertEquals(i1.getEntryType(), "Item");
         assertEquals(p1.getEntryType(), "PlayerCharacter");
@@ -75,7 +75,7 @@ public class EntryTest {
     public void compareTo() {
         List<Entry> entries = new LinkedList<Entry>();
         for (int i = 0; i < 15; i++) {
-            entries.add(new Entry());
+            entries.add(new Entry("", EngineManager.getSkin()));
             assertTrue(entries.get(i).compareTo(entries.get(i)) == 0);
         }
         for (int i = 0; i < 14; i++) {

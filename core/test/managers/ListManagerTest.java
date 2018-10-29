@@ -22,14 +22,14 @@ public class ListManagerTest {
 
     @Test
     public void AddTest() {
-        Handout e1 = new Handout();
-        Handout e2 = new Handout();
-        Handout e3 = new Handout();
-        Handout e4 = new Handout();
-        Item e5 = new Item();
-        Item e6 = new Item();
-        Item e7 = new Item();
-        Item e8 = new Item();
+        Handout e1 = new Handout("", EngineManager.getSkin());
+        Handout e2 = new Handout("", EngineManager.getSkin());
+        Handout e3 = new Handout("", EngineManager.getSkin());
+        Handout e4 = new Handout("", EngineManager.getSkin());
+        Item e5 = new Item("", EngineManager.getSkin());
+        Item e6 = new Item("", EngineManager.getSkin());
+        Item e7 = new Item("", EngineManager.getSkin());
+        Item e8 = new Item("", EngineManager.getSkin());
 
         assertEquals(e1.getListOrder(), 0);
         assertEquals(e2.getListOrder(), 1);
@@ -50,14 +50,14 @@ public class ListManagerTest {
     @SuppressWarnings("unused")
     @Test
     public void RearrangeTest() {
-        Handout e1 = new Handout();
-        Handout e2 = new Handout();
-        Handout e3 = new Handout();
-        Handout e4 = new Handout();
-        Handout e5 = new Handout();
-        Handout e6 = new Handout();
-        Handout e7 = new Handout();
-        Handout e8 = new Handout();
+        Handout e1 = new Handout("", EngineManager.getSkin());
+        Handout e2 = new Handout("", EngineManager.getSkin());
+        Handout e3 = new Handout("", EngineManager.getSkin());
+        Handout e4 = new Handout("", EngineManager.getSkin());
+        Handout e5 = new Handout("", EngineManager.getSkin());
+        Handout e6 = new Handout("", EngineManager.getSkin());
+        Handout e7 = new Handout("", EngineManager.getSkin());
+        Handout e8 = new Handout("", EngineManager.getSkin());
 
 
         EngineManager.getListManager().swapEntries(e1, e4);

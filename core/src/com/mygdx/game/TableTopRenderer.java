@@ -30,7 +30,7 @@ public class TableTopRenderer {
     private float gridHeight;
     private float gridWidth;
     private TextureRegion gridLines;
-    private DragBox dragBoxes;
+    private DragBox[] dragBoxes;
 
 
     /**
@@ -38,6 +38,10 @@ public class TableTopRenderer {
      */
     public TableTopRenderer() {
         shapeRenderer = new ShapeRenderer();
+        dragBoxes = new DragBox[9];
+        for (int i = 0; i <= 8; i++) {
+            dragBoxes[i] = new DragBox(i, "assets/badlogic.jpg");
+        }
     }
 
     /**
@@ -143,6 +147,15 @@ public class TableTopRenderer {
         shapeRenderer.end();
 
         //Draw the Boxes
+        batch.begin();
+        for (int i = 0; i < 9; i++) {
+            dragBoxes[i].moveTo(minX, minY, width, height);
+            batch.draw(dragBoxes[i].getTextureRegion(), dragBoxes[i].getX() - 4, dragBoxes[i].getY() - 4, 8, 8);
+        }
+        batch.end();
+
+
+
 
 
     }

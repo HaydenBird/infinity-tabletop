@@ -257,7 +257,10 @@ public class UIManager {
                         Dialogs.showInputDialog(getStage(), "Light distance", "Distance: ", new InputDialogAdapter() {
                             @Override
                             public void finished(String input) {
-                                EngineManager.getSelectedToken().enableOmniLight(newColor, Integer.parseInt(input));
+                                for (TableTopToken token : EngineManager.getSelectedTokens()) {
+                                    token.enableOmniLight(newColor, Integer.parseInt(input));
+                                }
+
                             }
                         });
                     }

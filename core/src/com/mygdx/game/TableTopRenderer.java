@@ -16,6 +16,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.mygdx.managers.EngineManager;
 import com.mygdx.managers.UIManager;
 
+import java.util.List;
+
 /**
  * The class that handles all of the rendering for the map screen and the lighting shaders
  */
@@ -74,6 +76,7 @@ public class TableTopRenderer {
         rayHandler.setCombinedMatrix((OrthographicCamera) mapStage.getCamera());
         rayHandler.updateAndRender();
         //Render the UI on top
+        drawSelection(batch);
         UIManager.getStage().act();
         UIManager.getStage().draw();
 
@@ -108,6 +111,38 @@ public class TableTopRenderer {
         batch.draw(gridBackground, 0, 0, gridWidth, gridHeight);
         batch.draw(gridLines, 0, 0, gridWidth, gridHeight);
         batch.end();
+
+
+    }
+
+    /**
+     * This method draws a box around the currently selected token, with corner boxes for dragging
+     */
+    private void drawSelection(Batch batch) {
+        List<TableTopToken> currentlySelectedToken = EngineManager.getSelectedTokens();
+        if (currentlySelectedToken == null || currentlySelectedToken.size() == 0) return;
+        //find the leftmost, rightmost, up most, and down most points
+        float minX = Float.MAX_VALUE;
+        float maxX = Float.MIN_VALUE;
+        float minY = Float.MAX_VALUE;
+        float maxY = Float.MIN_VALUE;
+        for (TableTopToken token : currentlySelectedToken) {
+            //Calculate the tokens min x
+            minX = Float.min(minX, token.getX());
+            //Calculate the tokens max x
+            maxX = Float.max(maxX, token.getX() + token.getWidth());
+            //Calculate the tokens min y
+            minY = Float.min(minY, token.getY());
+            //Calculate the tokens max y
+            maxY = Float.max(maxY, token.getY() + token.getHeight());
+        }
+        float width = maxX - minX;
+        float height = maxY - minY;
+        shapeRenderer.setProjectionMatrix(EngineManager.getMapStage().getCamera().combined);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(Color.CYAN);
+        shapeRenderer.rect(minX - 5, minY - 5, width + 10, height + 10);
+        shapeRenderer.end();
 
 
     }

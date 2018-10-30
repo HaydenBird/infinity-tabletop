@@ -7,6 +7,8 @@ import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.mygdx.managers.EngineManager;
 import sun.security.ssl.Debug;
 
+import java.util.List;
+
 public class KeyListener extends InputListener {
 
     private TableTopRenderer renderer;
@@ -30,23 +32,25 @@ public class KeyListener extends InputListener {
     @Override
     public boolean keyDown(InputEvent event, int keycode) {
         Debug.println("Key down", "Key is " + Input.Keys.toString(keycode));
-        TableTopToken token = EngineManager.getSelectedToken();
-        if (token == null) return false;
-        switch (keycode) {
-            case Input.Keys.UP:
-                token.snapToGrid(token.getX(), token.getY() + 70);
-                break;
-            case Input.Keys.DOWN:
-                token.snapToGrid(token.getX(), token.getY() - 70);
-                break;
-            case Input.Keys.LEFT:
-                token.snapToGrid(token.getX() - 70, token.getY());
-                break;
-            case Input.Keys.RIGHT:
-                token.snapToGrid(token.getX() + 70, token.getY());
-                break;
-
+        List<TableTopToken> tokens = EngineManager.getSelectedTokens();
+        if (tokens.size() == 0 || tokens == null) return false;
+        for (TableTopToken token : tokens) {
+            switch (keycode) {
+                case Input.Keys.UP:
+                    token.snapToGrid(token.getX(), token.getY() + 70);
+                    break;
+                case Input.Keys.DOWN:
+                    token.snapToGrid(token.getX(), token.getY() - 70);
+                    break;
+                case Input.Keys.LEFT:
+                    token.snapToGrid(token.getX() - 70, token.getY());
+                    break;
+                case Input.Keys.RIGHT:
+                    token.snapToGrid(token.getX() + 70, token.getY());
+                    break;
+            }
         }
+
         return true;
     }
 

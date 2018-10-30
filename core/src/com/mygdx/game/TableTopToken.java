@@ -62,28 +62,50 @@ public class TableTopToken extends Image {
         this.setPosition(xPos, yPos);
 
 
-        TableTopToken a = this;
+        TableTopToken thisToken = this;
         this.addListener(new DragListener() {
             public void drag(InputEvent event, float x, float y, int pointer) {
                 Debug.println("Dragging", "X: " + x + ", Y: " + y);
-                position.x += x;
-                position.y += y;
-                a.setPosition(position.x - a.getWidth() / 2, position.y - a.getHeight() / 2);
-                EngineManager.getMapStage().getCamera().update();
+                if (!EngineManager.getSelectedTokens().contains(thisToken)) {
+                    if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) {
+                        EngineManager.setSelectedToken(thisToken);
+                    } else {
+                        EngineManager.clearSelectedTokens();
+                        EngineManager.setSelectedToken(thisToken);
+                    }
+
+
+                }
+                for (TableTopToken a : EngineManager.getSelectedTokens()) {
+                    a.position.x += x;
+                    a.position.y += y;
+                    a.setPosition(a.position.x - a.getWidth() / 2, a.position.y - a.getHeight() / 2);
+                    EngineManager.getMapStage().getCamera().update();
+                }
+
             }
 
             public void dragStop(InputEvent event, float x, float y, int pointer) {
-                a.snapToGrid(a.position.x, a.position.y);
+                for (TableTopToken a : EngineManager.getSelectedTokens()) {
+                    a.snapToGrid(a.position.x, a.position.y);
+                }
             }
         });
 
         this.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                EngineManager.setSelectedToken(a);
-
+                if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) {
+                    if (EngineManager.getSelectedTokens().contains(thisToken)) {
+                        EngineManager.getSelectedTokens().remove(thisToken);
+                    } else {
+                        EngineManager.setSelectedToken(thisToken);
+                    }
+                } else {
+                    EngineManager.clearSelectedTokens();
+                    EngineManager.setSelectedToken(thisToken);
+                }
             }
-
         });
 
     }

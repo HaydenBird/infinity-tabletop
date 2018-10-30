@@ -21,6 +21,9 @@ import com.mygdx.tabletop.Campaign;
 import com.mygdx.tabletop.Player;
 import sun.security.ssl.Debug;
 
+import java.util.LinkedList;
+import java.util.List;
+
 /**
  * This class contains a lot of things that will eventually be split up into more logical parts
  */
@@ -36,7 +39,7 @@ public class EngineManager {
     private static Campaign loadedCampaign;
     private static OrthographicCamera hudCamera;
     private static InputMultiplexer multiplexer;
-    private static TableTopToken selectedToken;
+    private static List<TableTopToken> selectedToken = new LinkedList<>();
     private static World world;
 
     /**
@@ -361,12 +364,17 @@ public class EngineManager {
         mapCamera.update();
     }
 
-    public static TableTopToken getSelectedToken() {
+    public static List<TableTopToken> getSelectedTokens() {
         return EngineManager.selectedToken;
     }
 
+    public static void clearSelectedTokens() {
+        if (selectedToken != null) selectedToken.clear();
+    }
+
     public static void setSelectedToken(TableTopToken a) {
-        EngineManager.selectedToken = a;
+        if (selectedToken == null) selectedToken = new LinkedList<>();
+        if (!selectedToken.contains(a)) selectedToken.add(a);
     }
 
     public static void setCurrentMap(TableTopMap map) {
@@ -396,7 +404,7 @@ public class EngineManager {
         for (TableTopToken token : currentMap.getBlockingLayerTokens()) {
             token.renableOmniLight();
         }
-
+        clearSelectedTokens();
     }
 
     public static void setWorld(World world) {

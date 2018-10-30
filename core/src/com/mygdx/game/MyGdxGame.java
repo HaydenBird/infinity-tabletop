@@ -38,8 +38,8 @@ public class MyGdxGame extends Game {
 
         renderer = new TableTopRenderer(); //Initialize the renderer
         this.setScreen(new TableTopMap("New Map", this, true)); //Set the currently rendered map to be a new one
-        EngineManager.setWorld(world);
         rayHandler = EngineManager.getRayHandler(world); //Initialize and set up the ray handler
+        EngineManager.setCurrentMap(EngineManager.getCurrentMap());
         UIManager.setGame(this);
         //Test tokens for the map
         TableTopToken t = new TableTopToken(0, 0 / EngineManager.getRatio(), "assets/badlogic.jpg", EngineManager.getCurrentMap());

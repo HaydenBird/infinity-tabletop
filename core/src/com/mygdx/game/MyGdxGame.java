@@ -11,6 +11,9 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.DragListener;
 import com.mygdx.managers.EngineManager;
 import com.mygdx.managers.UIManager;
@@ -43,9 +46,7 @@ public class MyGdxGame extends Game {
         UIManager.setGame(this);
         //Test tokens for the map
         TableTopToken t = new TableTopToken(0, 0 / EngineManager.getRatio(), "assets/badlogic.jpg", EngineManager.getCurrentMap());
-        TableTopToken t2 = new TableTopToken(200, -200 / EngineManager.getRatio(), "assets/badlogic.jpg", EngineManager.getCurrentMap());
-        EngineManager.getMapStage().addActor(t);
-        EngineManager.getMapStage().addActor(t2);
+        TableTopToken t2 = new TableTopToken(200, 200 / EngineManager.getRatio(), "assets/badlogic.jpg", EngineManager.getCurrentMap());
         t2.enableOmniLight(Color.WHITE, 1000);
         t.createBody(EngineManager.getCurrentMap().getWorld());
 
@@ -63,6 +64,16 @@ public class MyGdxGame extends Game {
             }
         });
 
+        Table cont = new Table();
+        cont.setTouchable(Touchable.enabled);
+        cont.setFillParent(true);
+        cont.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                EngineManager.clearSelectedTokens();
+            }
+        });
+        EngineManager.getMapStage().addActor(cont);
     }
 
     /**

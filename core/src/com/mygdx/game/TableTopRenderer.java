@@ -30,6 +30,7 @@ public class TableTopRenderer {
     private float gridHeight;
     private float gridWidth;
     private TextureRegion gridLines;
+    private DragBox dragBoxes;
 
 
     /**
@@ -51,9 +52,7 @@ public class TableTopRenderer {
         world.step(Gdx.graphics.getDeltaTime(), 6, 2);
         //Render a generic background
         renderGrid(Color.LIGHT_GRAY, Color.RED, 50, 50, batch);
-
         //Render the Map
-        mapStage.act();
         TableTopMap currentMap = EngineManager.getCurrentMap();
         TextureRegion textureRegion;
         batch.begin();
@@ -70,8 +69,6 @@ public class TableTopRenderer {
             batch.draw(textureRegion, token.getX(), token.getY(), token.getWidth(), token.getHeight());
         }
         batch.end();
-
-
         //Render lighting
         rayHandler.setCombinedMatrix((OrthographicCamera) mapStage.getCamera());
         rayHandler.updateAndRender();
@@ -117,6 +114,7 @@ public class TableTopRenderer {
 
     /**
      * This method draws a box around the currently selected token, with corner boxes for dragging
+     * @param batch the batch used to render the resizing boxes
      */
     private void drawSelection(Batch batch) {
         List<TableTopToken> currentlySelectedToken = EngineManager.getSelectedTokens();
@@ -143,6 +141,8 @@ public class TableTopRenderer {
         shapeRenderer.setColor(Color.CYAN);
         shapeRenderer.rect(minX - 5, minY - 5, width + 10, height + 10);
         shapeRenderer.end();
+
+        //Draw the Boxes
 
 
     }

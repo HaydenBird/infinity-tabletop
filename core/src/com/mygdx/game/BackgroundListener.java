@@ -2,13 +2,14 @@ package com.mygdx.game;
 
 import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.mygdx.managers.EngineManager;
 
 /**
  * This class is used to allow panning
  */
 
-public class BackgroundListener implements GestureDetector.GestureListener {
+public class BackgroundListener extends ClickListener implements GestureDetector.GestureListener {
 
     private final TableTopRenderer renderer;
 
@@ -62,5 +63,4 @@ public class BackgroundListener implements GestureDetector.GestureListener {
     public void pinchStop() {
 
     }
-
 }

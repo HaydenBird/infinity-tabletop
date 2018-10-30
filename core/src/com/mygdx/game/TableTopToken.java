@@ -46,7 +46,6 @@ public class TableTopToken extends Image {
     public TableTopToken(float xPos, float yPos, String imagePath, TableTopMap parentMap) {
         textureRegion = new TextureRegion(EngineManager.getTexture(imagePath));
         //this.setDrawable(new TextureRegionDrawable(textureRegion);
-        debug();
         valuesCurrent = new float[NUMBER_OF_VALUES];
         valuesMax = new float[NUMBER_OF_VALUES];
         this.parentMap = parentMap;

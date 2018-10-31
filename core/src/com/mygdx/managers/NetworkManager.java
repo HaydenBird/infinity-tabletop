@@ -4,7 +4,11 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Net.Protocol;
 import com.badlogic.gdx.net.ServerSocket;
 import com.badlogic.gdx.net.ServerSocketHints;
+import com.mygdx.containers.RollContainer;
 import com.mygdx.tabletop.Campaign;
+
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * This class will handle all the communication between instances of the program
@@ -17,6 +21,9 @@ import com.mygdx.tabletop.Campaign;
  *
  * Player connect message:
  *  connect [display name] [id] [password hash] [message id]
+ *
+ *  Check player is still connected
+ *  checkin [message id]
  *
  * Token created message:
  *  token [parent map id] [token id] [token X] [token Y] [layer] [image asset name] [id of the image to transfer] [message id]
@@ -60,8 +67,10 @@ import com.mygdx.tabletop.Campaign;
 public class NetworkManager {
 
     private static ServerSocket serverSocket;
+    private static Queue<RollContainer.Command> commandQueue;
 
     public static void startServer(String host, int port) {
+        commandQueue = new ConcurrentLinkedQueue<RollContainer.Command>();
         ServerSocketHints serverHints = new ServerSocketHints();
         serverSocket = Gdx.net.newServerSocket(Protocol.TCP, host, port, serverHints);
 
@@ -78,7 +87,6 @@ public class NetworkManager {
 
 
     private class listenForPlayers implements Runnable {
-
         @Override
         public void run() {
             while (true) {
@@ -88,15 +96,11 @@ public class NetworkManager {
     }
 
 
-    //TODO: Sending gamestate to a player
+    private class listenForCommands implements Runnable {
+        @Override
+        public void run() {
 
-    //TODO: Checking if players are still connected
-
-    //TODO: Determine what assets a player can see
-
-    //TODO: Determine what has changed since player last updated
-
-    //TODO: cache image assets
-
+        }
+    }
 
 }

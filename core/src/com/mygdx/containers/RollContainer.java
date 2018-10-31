@@ -37,4 +37,6 @@ public class RollContainer {
         this.rollCommands = rollCommands;
     }
 
+    public static class Command {
+    }
 }

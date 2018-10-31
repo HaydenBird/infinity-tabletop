@@ -14,6 +14,7 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.mygdx.managers.EngineManager;
+import com.mygdx.managers.NetworkManager;
 import com.mygdx.managers.UIManager;
 
 import java.util.List;
@@ -91,6 +92,7 @@ public class TableTopRenderer {
         drawSelection(batch);
         UIManager.getStage().act();
         UIManager.getStage().draw();
+        NetworkManager.handleNextCommand();
 
     }
 

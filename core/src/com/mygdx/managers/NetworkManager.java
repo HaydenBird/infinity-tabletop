@@ -4,8 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Net.Protocol;
 import com.badlogic.gdx.net.ServerSocket;
 import com.badlogic.gdx.net.ServerSocketHints;
-import com.mygdx.containers.RollContainer;
-import com.mygdx.tabletop.Campaign;
+import com.mygdx.containers.Command;
 
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -67,22 +66,54 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class NetworkManager {
 
     private static ServerSocket serverSocket;
-    private static Queue<RollContainer.Command> commandQueue;
+    private static Queue<Command> commandQueue; //This is the only place in which the networking threads will communicate with the main thread
 
     public static void startServer(String host, int port) {
-        commandQueue = new ConcurrentLinkedQueue<RollContainer.Command>();
+        commandQueue = new ConcurrentLinkedQueue<>();
         ServerSocketHints serverHints = new ServerSocketHints();
         serverSocket = Gdx.net.newServerSocket(Protocol.TCP, host, port, serverHints);
 
     }
-
-    public static Campaign getNetworkCampaign(String ipAddress, String port) {
-        return null;
-        //TODO: load a gamestate from network
-    }
-
     public static void clearCommandQueue() {
         //TODO: clear command queue
+    }
+
+    public static Command getNextCommand() {
+        return commandQueue.poll();
+    }
+
+    public static void handleNextCommand() {
+        Command currentCommand = getNextCommand();
+        switch (currentCommand.getType()) {
+            case RESPONSE:
+                break;
+            case CONNECT:
+                break;
+            case CHECKIN:
+                break;
+            case TOKEN:
+                break;
+            case MOVE:
+                break;
+            case CHANGE_IMAGE:
+                break;
+            case LIGHT_CHANGE:
+                break;
+            case ASSOCIATE:
+                break;
+            case NEW_ENTRY:
+                break;
+            case LINK_ENTRY:
+                break;
+            case NEW_MAP:
+                break;
+            case MOVE_TO_MAP:
+                break;
+            case MOVE_ALL_TO_MAP:
+                break;
+            case CHAT:
+                break;
+        }
     }
 
 
@@ -90,7 +121,7 @@ public class NetworkManager {
         @Override
         public void run() {
             while (true) {
-                //TODO: Add new player in a threadsafe way
+                //TODO: create new socket to listen to commands on
             }
         }
     }
@@ -99,7 +130,7 @@ public class NetworkManager {
     private class listenForCommands implements Runnable {
         @Override
         public void run() {
-
+            //TODO: parse command and add it to the queue
         }
     }
 

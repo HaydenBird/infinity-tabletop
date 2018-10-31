@@ -228,7 +228,6 @@ public class EngineManager {
      * @param port      the port to connect on
      */
     public static void joinNetworkGame(String ipAddress, String port) {
-        loadedCampaign = NetworkManager.getNetworkCampaign(ipAddress, port);
 
 
     }

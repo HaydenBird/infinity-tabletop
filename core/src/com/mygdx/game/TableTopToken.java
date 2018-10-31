@@ -207,10 +207,8 @@ public class TableTopToken extends Image {
         if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) {
             return;
         }
-        float newX = x;
-        float newY = y;
-        newX = newX - newX % DEFAULT_WIDTH;
-        newY = newY - newY % DEFAULT_HEIGHT;
+        float newX = Math.round(x / DEFAULT_WIDTH) * DEFAULT_WIDTH;
+        float newY = Math.round(y / DEFAULT_HEIGHT) * DEFAULT_HEIGHT;
         this.setPosition(newX, newY);
     }
 

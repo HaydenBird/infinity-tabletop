@@ -14,6 +14,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.kotcrab.vis.ui.VisUI;
+import com.mygdx.game.DragBox;
 import com.mygdx.game.TableTopMap;
 import com.mygdx.game.TableTopRenderer;
 import com.mygdx.game.TableTopToken;
@@ -41,6 +42,7 @@ public class EngineManager {
     private static InputMultiplexer multiplexer;
     private static List<TableTopToken> selectedToken = new LinkedList<>();
     private static World world;
+    private static TableTopRenderer renderer;
 
     /**
      * This returns the stage that is used for tokens
@@ -407,8 +409,18 @@ public class EngineManager {
         clearSelectedTokens();
     }
 
+    private static void disableDragBoxes() {
+        for (DragBox dragBox : renderer.dragBoxes()) {
+            dragBox.setVisible(false);
+        }
+    }
+
     public static void setWorld(World world) {
         EngineManager.world = world;
 
+    }
+
+    public static void setRenderer(TableTopRenderer renderer) {
+        EngineManager.renderer = renderer;
     }
 }

@@ -39,9 +39,19 @@ public class TableTopRenderer {
     public TableTopRenderer() {
         shapeRenderer = new ShapeRenderer();
         dragBoxes = new DragBox[9];
+        EngineManager.setRenderer(this);
         for (int i = 0; i <= 8; i++) {
             dragBoxes[i] = new DragBox(i, "assets/badlogic.jpg");
+            EngineManager.getMapStage().addActor(dragBoxes[i]);
         }
+    }
+
+
+    /**
+     * @return the drag boxes
+     */
+    public DragBox[] dragBoxes() {
+        return dragBoxes;
     }
 
     /**
@@ -59,6 +69,7 @@ public class TableTopRenderer {
         //Render the Map
         TableTopMap currentMap = EngineManager.getCurrentMap();
         TextureRegion textureRegion;
+
         batch.begin();
         for (TableTopToken token : currentMap.getMapLayerTokens()) {
             textureRegion = token.getTextureRegion();
@@ -78,6 +89,7 @@ public class TableTopRenderer {
         rayHandler.updateAndRender();
         //Render the UI on top
         drawSelection(batch);
+        EngineManager.getMapStage().draw();
         UIManager.getStage().act();
         UIManager.getStage().draw();
 
@@ -150,7 +162,7 @@ public class TableTopRenderer {
         batch.begin();
         for (int i = 0; i < 9; i++) {
             dragBoxes[i].moveTo(minX, minY, width, height);
-            batch.draw(dragBoxes[i].getTextureRegion(), dragBoxes[i].getX() - 4, dragBoxes[i].getY() - 4, 8, 8);
+            batch.draw(dragBoxes[i].getTextureRegion(), dragBoxes[i].getX(), dragBoxes[i].getY(), 8, 8);
         }
         batch.end();
 

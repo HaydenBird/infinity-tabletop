@@ -1,8 +1,13 @@
 package com.mygdx.game;
 
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.utils.DragListener;
 import com.mygdx.managers.EngineManager;
+import sun.security.ssl.Debug;
+
+import java.util.List;
 
 public class DragBox extends Image {
 
@@ -14,6 +19,7 @@ public class DragBox extends Image {
         textureRegion = new TextureRegion(EngineManager.getTexture(imagePath));
         createListener(side);
         this.setSize(8, 8);
+        debug();
     }
 
     public TextureRegion getTextureRegion() {
@@ -23,100 +29,114 @@ public class DragBox extends Image {
     private void createListener(int side) {
         switch (side) {
             case Side.TOP_LEFT:
-                createTopLeft();
+                setDragListener(-1, 1, 1, 0);
                 break;
             case Side.LEFT:
-                createLeft();
+                setDragListener(-1, 0, 1, 0);
                 break;
             case Side.BOTTOM_LEFT:
-                createBottomLeft();
+                setDragListener(-1, -1, 1, 1);
                 break;
             case Side.TOP:
-                createTop();
+                setDragListener(0, 1, 0, 0);
                 break;
             case Side.BOTTOM:
-                createBottom();
+                setDragListener(0, -1, 0, 1);
                 break;
             case Side.TOP_RIGHT:
-                createTopRight();
+                setDragListener(1, 1, 0, 0);
                 break;
             case Side.BOTTOM_RIGHT:
-                createBottomRight();
+                setDragListener(1, -1, 0, 1);
                 break;
             case Side.RIGHT:
-                createRight();
+                setDragListener(1, 0, 0, 0);
                 break;
             case Side.ROTATION:
-                createRotation();
+
                 break;
         }
     }
 
-    private void createLeft() {
+    /**
+     * THis method creates the listener so when the boxes are dragged the tokens are resized
+     *
+     * @param xMultiplier this determines how much the x movement of the drag affects the resizing
+     * @param yMultiplier this determines how much the y movement of the drag affects the resizing
+     * @param moveX       this determines how much the token is moved when dragging
+     * @param moveY       this determines how much the token is moved when dragging
+     */
+    private void setDragListener(float xMultiplier, float yMultiplier, float moveX, float moveY) {
+        DragBox dragBox = this;
+        List<TableTopToken> tokens = EngineManager.getSelectedTokens();
+        Debug.println("Dragbox listener made", "");
+        this.addListener(new DragListener() {
+            @Override
+            public void drag(InputEvent event, float x, float y, int pointer) {
+                Debug.println("Dragbox dragged", "");
+                float deltaX = this.getDeltaX();
+                float deltaY = this.getDeltaY();
+                for (TableTopToken token : tokens) {
+                    token.setWidth(token.getWidth() + x * xMultiplier);
+                    token.setHeight(token.getHeight() + y * yMultiplier);
+                    token.setX(token.getX() + x * moveX);
+                    token.setY(token.getY() + y * moveY);
+                    token.setPosition(token.getX(), token.getY());
+                }
+                EngineManager.getMapStage().getCamera().update();
+            }
+
+            public void dragStop(InputEvent event, float x, float y, int pointer) {
+                Debug.println("Drag stopped", "Snap to size");
+                for (TableTopToken token : tokens) {
+                    token.snapToSize();
+                }
+            }
+        });
 
     }
 
-    private void createBottomLeft() {
+    private void setRotateListener() {
 
     }
 
-    private void createTop() {
-
-    }
-
-    private void createBottom() {
-
-    }
-
-    private void createTopRight() {
-
-    }
-
-    private void createBottomRight() {
-
-    }
-
-    private void createRight() {
-
-    }
-
-    private void createRotation() {
-
-    }
-
-    private void createTopLeft() {
-
-    }
+    /**
+     * This method takes the bottom left corner of the bounding box (the minimum X and Y position) and the width and height of the box,
+     * the method then moves the dragbox to the correct position on the bounding box depending on its side
+     * @param minX the minimum X coord of the bounding box
+     * @param minY the minimum Y coord of the bounding box
+     * @param width the width of the bounding box
+     * @param height the height of the bounding box
+     */
 
     public void moveTo(float minX, float minY, float width, float height) {
-
         switch (side) {
             case Side.TOP_LEFT:
-                setPosition(minX - 5, minY + height + 5);
+                super.setPosition(minX - 10, minY + height + 2);
                 break;
             case Side.LEFT:
-                setPosition(minX - 5, minY + height / 2);
+                super.setPosition(minX - 10, minY + height / 2);
                 break;
             case Side.BOTTOM_LEFT:
-                setPosition(minX - 5, minY - 5);
+                super.setPosition(minX - 10, minY - 10);
                 break;
             case Side.TOP:
-                setPosition(minX + width / 2, minY + height + 5);
+                super.setPosition(minX + width / 2, minY + height + 2);
                 break;
             case Side.BOTTOM:
-                setPosition(minX + width / 2, minY - 5);
+                super.setPosition(minX + width / 2, minY - 10);
                 break;
             case Side.TOP_RIGHT:
-                setPosition(minX + 5 + width, minY + height + 5);
+                super.setPosition(minX + 2 + width, minY + height + 2);
                 break;
             case Side.BOTTOM_RIGHT:
-                setPosition(minX + 5 + width, minY - 5);
+                super.setPosition(minX + 2 + width, minY - 10);
                 break;
             case Side.RIGHT:
-                setPosition(minX + 5 + width, minY + height / 2);
+                super.setPosition(minX + 2 + width, minY + height / 2);
                 break;
             case Side.ROTATION:
-                setPosition(minX + width / 2, minY + height + 20);
+                super.setPosition(minX + width / 2, minY + height + 20);
                 break;
         }
 

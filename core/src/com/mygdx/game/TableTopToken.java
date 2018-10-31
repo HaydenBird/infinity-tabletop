@@ -262,5 +262,21 @@ public class TableTopToken extends Image {
             omniLight.setActive(true);
         }
     }
+
+    public void snapToSize() {
+
+        Debug.println("Snap to size", "Width=" + this.getWidth() + ", Height=" + this.getHeight());
+        if (Gdx.input.isKeyPressed(Input.Keys.ALT_LEFT)) {
+            this.setPosition(this.getX(), this.getY());
+        } else {
+            float roundedWidth = Math.round(width / DEFAULT_WIDTH) * DEFAULT_WIDTH;
+            float roundedHeight = Math.round(height / DEFAULT_HEIGHT) * DEFAULT_HEIGHT;
+            this.setWidth(roundedWidth);
+            this.setHeight(roundedHeight);
+            snapToGrid(this.getX(), this.getY());
+        }
+        width = Math.max(width, DEFAULT_WIDTH);
+        height = Math.max(height, DEFAULT_HEIGHT);
+    }
 }
 

@@ -315,7 +315,6 @@ public class EngineManager {
             rayHandler.setCombinedMatrix(mapStage.getCamera().combined, 0, 0, 1, 1);
             rayHandler.setShadows(true);
             rayHandler.setCulling(true);
-            rayHandler.setAmbientLight(0.11f, 0.1f, 0.1f, 0f);
             rayHandler.setBlurNum(5);
         }
         return rayHandler;

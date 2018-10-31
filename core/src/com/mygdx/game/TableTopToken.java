@@ -15,7 +15,11 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.DragListener;
 import com.mygdx.managers.EngineManager;
 import com.mygdx.tabletop.Entry;
+import com.mygdx.tabletop.Player;
 import sun.security.ssl.Debug;
+
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * This class represents a token on the map tokens have an image that they display, and they can be dragged around on the map
@@ -32,6 +36,7 @@ public class TableTopToken extends Image {
     private final float DEFAULT_HEIGHT = 70;
     private final int NUMBER_OF_VALUES = 4;
     private final Vector3 position;
+    private List<Player> owners;
 
     private final TextureRegion textureRegion;
 
@@ -45,15 +50,15 @@ public class TableTopToken extends Image {
      */
     public TableTopToken(float xPos, float yPos, String imagePath, TableTopMap parentMap, int layer) {
         textureRegion = new TextureRegion(EngineManager.getTexture(imagePath));
-        //this.setDrawable(new TextureRegionDrawable(textureRegion);
         valuesCurrent = new float[NUMBER_OF_VALUES];
         valuesMax = new float[NUMBER_OF_VALUES];
         this.parentMap = parentMap;
+        owners = new LinkedList<>();
         parentMap.addToken(this, TableTopMap.Layer.TOKEN);
         parentMap.setSaved(false);
         this.texturePath = imagePath;
         position = new Vector3(xPos, yPos * EngineManager.getRatio(), 0);
-        omniLight = null;
+        if (owners.contains(EngineManager.getCurrentPlayer())) enableOmniLight(new Color(100f, 100f, 100f, 0.2f), 70);
         coneLight = null;
         this.setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
         setWidth(DEFAULT_WIDTH);
@@ -174,6 +179,9 @@ public class TableTopToken extends Image {
     public void enableOmniLight(Color color, float omniLightDistance) {
         if (omniLight == null) {
             omniLight = new PointLight(EngineManager.getRayHandler(null), 128, color, omniLightDistance, position.x + width / 2, position.y + height / 2);
+        } else {
+            omniLight.setDistance(omniLightDistance);
+            omniLight.setColor(color);
         }
         omniLight.setStaticLight(false);
         omniLight.setActive(true);

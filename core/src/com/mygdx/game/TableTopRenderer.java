@@ -89,7 +89,6 @@ public class TableTopRenderer {
         rayHandler.updateAndRender();
         //Render the UI on top
         drawSelection(batch);
-        EngineManager.getMapStage().draw();
         UIManager.getStage().act();
         UIManager.getStage().draw();
 

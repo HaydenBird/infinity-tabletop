@@ -43,7 +43,7 @@ public class TableTopToken extends Image {
      * @param imagePath the filepath to the image used for the token
      * @param parentMap the map the token is on
      */
-    public TableTopToken(float xPos, float yPos, String imagePath, TableTopMap parentMap) {
+    public TableTopToken(float xPos, float yPos, String imagePath, TableTopMap parentMap, int layer) {
         textureRegion = new TextureRegion(EngineManager.getTexture(imagePath));
         //this.setDrawable(new TextureRegionDrawable(textureRegion);
         valuesCurrent = new float[NUMBER_OF_VALUES];
@@ -59,7 +59,7 @@ public class TableTopToken extends Image {
         setWidth(DEFAULT_WIDTH);
         setHeight(DEFAULT_HEIGHT);
         this.setPosition(xPos, yPos);
-
+        this.layer = layer;
 
         TableTopToken thisToken = this;
         this.addListener(new DragListener() {
@@ -85,6 +85,7 @@ public class TableTopToken extends Image {
             }
 
             public void dragStop(InputEvent event, float x, float y, int pointer) {
+
                 for (TableTopToken a : EngineManager.getSelectedTokens()) {
                     a.snapToGrid(a.position.x, a.position.y);
                 }

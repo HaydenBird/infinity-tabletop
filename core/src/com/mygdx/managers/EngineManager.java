@@ -43,6 +43,7 @@ public class EngineManager {
     private static List<TableTopToken> selectedToken = new LinkedList<>();
     private static World world;
     private static TableTopRenderer renderer;
+    private static int layer;
 
     /**
      * This returns the stage that is used for tokens
@@ -79,7 +80,7 @@ public class EngineManager {
         mapStage.getCamera().viewportWidth = 1000;
         mapStage.getCamera().position.set(0, 0, 10);
         mapStage.getCamera().lookAt(0, 0, 0);
-
+        layer = TableTopMap.Layer.TOKEN;
 
     }
 
@@ -376,7 +377,7 @@ public class EngineManager {
 
     public static void setSelectedToken(TableTopToken a) {
         if (selectedToken == null) selectedToken = new LinkedList<>();
-        if (!selectedToken.contains(a)) selectedToken.add(a);
+        if (!selectedToken.contains(a) && a.getLayer() == layer) selectedToken.add(a);
     }
 
     public static void setCurrentMap(TableTopMap map) {
@@ -422,5 +423,13 @@ public class EngineManager {
 
     public static void setRenderer(TableTopRenderer renderer) {
         EngineManager.renderer = renderer;
+    }
+
+    public static int getLayer() {
+        return layer;
+    }
+
+    public static void setLayer(int layer) {
+        EngineManager.layer = layer;
     }
 }

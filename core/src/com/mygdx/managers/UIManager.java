@@ -226,12 +226,8 @@ public class UIManager {
         tokenMenu = new Menu("Token");
         createAddTokenButton(tokenMenu);
         createEnableLightButton(tokenMenu);
-        MenuItem layerSelect = new MenuItem("Layer");
-        PopupMenu layerSubmenu = new PopupMenu();
-        layerSubmenu.addItem(new MenuItem("Map"));
-        layerSubmenu.addItem(new MenuItem("Blocking"));
-        layerSubmenu.addItem(new MenuItem("Token"));
-        layerSelect.setSubMenu(layerSubmenu);
+        MenuItem layerSelect = new MenuItem("Move to layer");
+        createChangeLayerButton(layerSelect);
         tokenMenu.addItem(layerSelect);
         tokenMenu.addItem(new MenuItem("Copy"));
         tokenMenu.addItem(new MenuItem("Cut"));
@@ -241,6 +237,88 @@ public class UIManager {
         tokenMenu.addItem(new MenuItem("Set entry"));
         menuBar.addMenu(tokenMenu);
     }
+
+    private static void createSelectLayerButton(MenuItem layerSelect) {
+        PopupMenu layerSubmenu = new PopupMenu();
+        MenuItem mapLayer = new MenuItem("Map");
+        MenuItem blockingLayer = new MenuItem("Blocking");
+        MenuItem tokenLayer = new MenuItem("Token");
+
+        mapLayer.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                EngineManager.setLayer(TableTopMap.Layer.MAP);
+                EngineManager.clearSelectedTokens();
+            }
+        });
+
+        blockingLayer.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                EngineManager.setLayer(TableTopMap.Layer.BLOCKING);
+                EngineManager.clearSelectedTokens();
+            }
+        });
+
+        tokenLayer.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                EngineManager.setLayer(TableTopMap.Layer.TOKEN);
+                EngineManager.clearSelectedTokens();
+            }
+        });
+        tokenLayer.setChecked(true);
+        layerSubmenu.addItem(mapLayer);
+        layerSubmenu.addItem(blockingLayer);
+        layerSubmenu.addItem(tokenLayer);
+
+        layerSelect.setSubMenu(layerSubmenu);
+    }
+
+
+    private static void createChangeLayerButton(MenuItem layerSelect) {
+        PopupMenu layerSubmenu = new PopupMenu();
+        MenuItem mapLayer = new MenuItem("Map");
+        MenuItem blockingLayer = new MenuItem("Blocking");
+        MenuItem tokenLayer = new MenuItem("Token");
+
+        mapLayer.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                for (TableTopToken token : EngineManager.getSelectedTokens()) {
+                    token.setLayer(TableTopMap.Layer.MAP);
+                }
+                EngineManager.setLayer(TableTopMap.Layer.MAP);
+            }
+        });
+
+        blockingLayer.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                for (TableTopToken token : EngineManager.getSelectedTokens()) {
+                    token.setLayer(TableTopMap.Layer.BLOCKING);
+                }
+                EngineManager.setLayer(TableTopMap.Layer.BLOCKING);
+            }
+        });
+
+        tokenLayer.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                for (TableTopToken token : EngineManager.getSelectedTokens()) {
+                    token.setLayer(TableTopMap.Layer.TOKEN);
+                }
+                EngineManager.setLayer(TableTopMap.Layer.TOKEN);
+            }
+        });
+        tokenLayer.setChecked(true);
+        layerSubmenu.addItem(mapLayer);
+        layerSubmenu.addItem(blockingLayer);
+        layerSubmenu.addItem(tokenLayer);
+
+        layerSelect.setSubMenu(layerSubmenu);
+    }
+
 
     /**
      * This method creates the enable light button
@@ -326,7 +404,7 @@ public class UIManager {
             @Override
             public void selected(Array<FileHandle> file) {
                 TableTopToken newToken = new TableTopToken(EngineManager.getMapStage().getCamera().position.x, EngineManager.getMapStage().getCamera().position.y,
-                        file.get(0).path(), EngineManager.getCurrentMap());
+                        file.get(0).path(), EngineManager.getCurrentMap(), layer);
                 EngineManager.getCurrentMap().addToken(newToken, layer);
             }
         });
@@ -362,6 +440,9 @@ public class UIManager {
 
         });
         mapMenu.addItem(renameMenu);
+        MenuItem layerSelect = new MenuItem("Layer");
+        createSelectLayerButton(layerSelect);
+        mapMenu.addItem(layerSelect);
 
         MenuItem movePlayer = new MenuItem("Move players to current map");
         mapMenu.addItem(movePlayer);

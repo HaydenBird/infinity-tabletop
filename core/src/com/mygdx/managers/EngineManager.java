@@ -44,6 +44,7 @@ public class EngineManager {
     private static World world;
     private static TableTopRenderer renderer;
     private static int layer;
+    private static Player currentPlayer;
 
     /**
      * This returns the stage that is used for tokens
@@ -81,7 +82,17 @@ public class EngineManager {
         mapStage.getCamera().position.set(0, 0, 10);
         mapStage.getCamera().lookAt(0, 0, 0);
         layer = TableTopMap.Layer.TOKEN;
+        initPlayer();
 
+    }
+
+    /**
+     * Returns who the player who is running this instance of the program
+     *
+     * @return
+     */
+    public static Player getCurrentPlayer() {
+        return currentPlayer;
     }
 
     /**
@@ -273,13 +284,9 @@ public class EngineManager {
         return atlas;
     }
 
-    /**
-     * Returns who the player who is running this instance of the program
-     *
-     * @return
-     */
-    public static Player getCurrentPlayer() {
-        return null;//TODO: Return the current player
+    private void initPlayer() {
+        EngineManager.currentPlayer = new Player("Meee", "1234");
+
     }
 
     /**

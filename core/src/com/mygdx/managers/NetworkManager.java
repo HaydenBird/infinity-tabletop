@@ -8,6 +8,54 @@ import com.mygdx.tabletop.Campaign;
 
 /**
  * This class will handle all the communication between instances of the program
+ *
+ *
+ * Messages that we can send:
+ *
+ * response [message id] [response code]
+ *
+ *
+ * Player connect message:
+ *  connect [display name] [id] [password hash] [message id]
+ *
+ * Token created message:
+ *  token [parent map id] [token id] [token X] [token Y] [layer] [image asset name] [id of the image to transfer] [message id]
+ *
+ * Token moved:
+ * move [token id] [new X] [new Y] [new layer] [new width] [new height] [new rotation] [message id]
+ *
+ * Token image changed:
+ * changeimage [token id] [new asset name] [id of the message transfer] [message id]
+ *
+ * Token light changed:
+ * lightChange [token id] [light type] [light color] [light distance]
+ *
+ * Associate token with entry
+ * associate [token id] [entry id] [message id]
+ *
+ * Create entry:
+ * newentry [entry id] [entry name] [entry type] [message id]
+ *
+ * Link entry:
+ * linkentry [entry id] [URL] [message id]
+ *
+ * New Map Created:
+ * newmap [map id] [map name] [map width] [map height] [ambient light r] [ambient light g] [ambient light b] [ambient light a] [move players true/false] [message id]
+ *
+ * Move players to map:
+ * movetomap [map id] [player id 1] ... [player id n] [message id]
+ * movealltomap [map id] [message id]
+ *
+ * Chat message sent
+ * chat [message 1] [rolls 1] ... [message n] [rolls n] [style] [from] [gm only true/false] [message id]
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 public class NetworkManager {
 

@@ -336,7 +336,7 @@ public class UIManager {
                             @Override
                             public void finished(String input) {
                                 for (TableTopToken token : EngineManager.getSelectedTokens()) {
-                                    token.enableOmniLight(newColor, Integer.parseInt(input));
+                                    token.enableOmniLight(newColor, Integer.parseInt(input) * 110);
                                 }
 
                             }
@@ -404,7 +404,7 @@ public class UIManager {
             @Override
             public void selected(Array<FileHandle> file) {
                 TableTopToken newToken = new TableTopToken(EngineManager.getMapStage().getCamera().position.x, EngineManager.getMapStage().getCamera().position.y,
-                        file.get(0).path(), EngineManager.getCurrentMap(), layer);
+                        file.get(0).path(), EngineManager.getCurrentMap(), layer, EngineManager.getCurrentPlayer());
                 EngineManager.getCurrentMap().addToken(newToken, layer);
             }
         });

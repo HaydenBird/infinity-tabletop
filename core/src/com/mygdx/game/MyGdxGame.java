@@ -42,9 +42,9 @@ public class MyGdxGame extends Game {
         EngineManager.setCurrentMap(EngineManager.getCurrentMap());
         UIManager.setGame(this);
         //Test tokens for the map
-        TableTopToken t = new TableTopToken(0, 0 / EngineManager.getRatio(), "assets/badlogic.jpg", EngineManager.getCurrentMap(), TableTopMap.Layer.TOKEN);
-        TableTopToken t2 = new TableTopToken(200, 200 / EngineManager.getRatio(), "assets/badlogic.jpg", EngineManager.getCurrentMap(), TableTopMap.Layer.BLOCKING);
-        TableTopToken t3 = new TableTopToken(200, 0 / EngineManager.getRatio(), "assets/badlogic.jpg", EngineManager.getCurrentMap(), TableTopMap.Layer.MAP);
+        TableTopToken t = new TableTopToken(0, 0 / EngineManager.getRatio(), "assets/badlogic.jpg", EngineManager.getCurrentMap(), TableTopMap.Layer.TOKEN, EngineManager.getCurrentPlayer());
+        TableTopToken t2 = new TableTopToken(200, 200 / EngineManager.getRatio(), "assets/badlogic.jpg", EngineManager.getCurrentMap(), TableTopMap.Layer.BLOCKING, EngineManager.getCurrentPlayer());
+        TableTopToken t3 = new TableTopToken(200, 0 / EngineManager.getRatio(), "assets/badlogic.jpg", EngineManager.getCurrentMap(), TableTopMap.Layer.MAP, EngineManager.getCurrentPlayer());
         t2.enableOmniLight(Color.WHITE, 1000);
         t.createBody(EngineManager.getCurrentMap().getWorld());
 

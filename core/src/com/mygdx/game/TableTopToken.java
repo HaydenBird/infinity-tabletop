@@ -48,12 +48,13 @@ public class TableTopToken extends Image {
      * @param imagePath the filepath to the image used for the token
      * @param parentMap the map the token is on
      */
-    public TableTopToken(float xPos, float yPos, String imagePath, TableTopMap parentMap, int layer) {
+    public TableTopToken(float xPos, float yPos, String imagePath, TableTopMap parentMap, int layer, Player creator) {
         textureRegion = new TextureRegion(EngineManager.getTexture(imagePath));
         valuesCurrent = new float[NUMBER_OF_VALUES];
         valuesMax = new float[NUMBER_OF_VALUES];
         this.parentMap = parentMap;
         owners = new LinkedList<>();
+        owners.add(creator);
         parentMap.addToken(this, TableTopMap.Layer.TOKEN);
         parentMap.setSaved(false);
         this.texturePath = imagePath;
@@ -65,7 +66,15 @@ public class TableTopToken extends Image {
         setHeight(DEFAULT_HEIGHT);
         this.setPosition(xPos, yPos);
         this.layer = layer;
+        addClickListeners();
 
+
+    }
+
+    /**
+     * This method adds the listeners that allow you to interact with the token with your mouse
+     */
+    private void addClickListeners() {
         TableTopToken thisToken = this;
         this.addListener(new DragListener() {
             public void drag(InputEvent event, float x, float y, int pointer) {
@@ -96,7 +105,6 @@ public class TableTopToken extends Image {
                 }
             }
         });
-
         this.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -112,7 +120,6 @@ public class TableTopToken extends Image {
                 }
             }
         });
-
     }
 
     private Body body;

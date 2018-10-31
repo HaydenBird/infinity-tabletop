@@ -4,6 +4,7 @@ import com.badlogic.gdx.net.Socket;
 
 public class Player {
 
+    private boolean isSelf = false;
     private String displayName;
     private String playerID;
     private Socket playerSocket;
@@ -14,6 +15,14 @@ public class Player {
         this.displayName = displayName;
         this.playerID = playerID;
         this.playerSocket = playerSocket;
+    }
+
+
+    public Player(String displayName, String playerID) {
+        this.displayName = displayName;
+        this.playerID = playerID;
+        this.playerSocket = null;
+        this.isSelf = true;
     }
 
     public boolean isOnline() {

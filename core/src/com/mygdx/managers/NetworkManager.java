@@ -6,6 +6,8 @@ import com.badlogic.gdx.net.ServerSocket;
 import com.badlogic.gdx.net.ServerSocketHints;
 import com.mygdx.containers.Command;
 
+import java.io.*;
+import java.net.Socket;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -17,6 +19,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  *
  * response [message id] [response code]
  *
+ * New asset
+ *  newasset [file path] [filelength] [file hash] [message id]
  *
  * Player connect message:
  *  connect [display name] [id] [password hash] [message id]
@@ -89,7 +93,7 @@ public class NetworkManager {
                 break;
             case CONNECT:
                 break;
-            case CHECKIN:
+            case CHECK_IN:
                 break;
             case TOKEN:
                 break;
@@ -113,6 +117,78 @@ public class NetworkManager {
                 break;
             case CHAT:
                 break;
+            case NEW_FILE:
+                newFile(currentCommand);
+                break;
+        }
+    }
+
+    private static void newFile(Command currentCommand) {
+        //Check to see if we have a file with that name
+        //If yes then
+        //Check to see if the hash is the same
+        //If Yes, send response saying so
+        //If no, overwrite
+        //If no then continue
+        //Receive the file
+    }
+
+
+    private static void recieveFile(String filename, Socket socket, int fileSize) throws IOException {
+        File file = new File(filename);
+        int bytesRead;
+        int current;
+        FileOutputStream fos = null;
+        BufferedOutputStream bos = null;
+        try {
+            // receive file
+            byte[] bytearray = new byte[fileSize];
+            InputStream is = socket.getInputStream();
+            fos = new FileOutputStream(file);
+            bos = new BufferedOutputStream(fos);
+            bytesRead = is.read(bytearray, 0, bytearray.length);
+            current = bytesRead;
+
+            do {
+                bytesRead =
+                        is.read(bytearray, current, (bytearray.length - current));
+                if (bytesRead >= 0) current += bytesRead;
+            } while (bytesRead > -1);
+
+            bos.write(bytearray, 0, current);
+            bos.flush();
+
+        } finally {
+            if (fos != null) fos.close();
+            if (bos != null) bos.close();
+        }
+    }
+
+    private static void sendFile(Socket sock, String filepath) throws IOException {
+        FileInputStream fis = null;
+        BufferedInputStream bis = null;
+        OutputStream os = null;
+        try {
+            while (true) {
+
+                try {
+                    // send file
+                    File myFile = new File(filepath);
+                    byte[] mybytearray = new byte[(int) myFile.length()];
+                    fis = new FileInputStream(myFile);
+                    bis = new BufferedInputStream(fis);
+                    bis.read(mybytearray, 0, mybytearray.length);
+                    os = sock.getOutputStream();
+                    os.write(mybytearray, 0, mybytearray.length);
+                    os.flush();
+                } finally {
+                    if (bis != null) bis.close();
+                    if (os != null) os.close();
+                    if (sock != null) sock.close();
+                }
+            }
+        } finally {
+
         }
     }
 

@@ -20,6 +20,7 @@ import sun.security.ssl.Debug;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * This class represents a token on the map tokens have an image that they display, and they can be dragged around on the map
@@ -37,6 +38,7 @@ public class TableTopToken extends Image {
     private final int NUMBER_OF_VALUES = 4;
     private final Vector3 position;
     private List<Player> owners;
+    private final String tokenID;
 
     private final TextureRegion textureRegion;
 
@@ -67,7 +69,39 @@ public class TableTopToken extends Image {
         this.setPosition(xPos, yPos);
         this.layer = layer;
         addClickListeners();
+        tokenID = UUID.randomUUID().toString();
 
+    }
+
+    /**
+     * The constructor for a token
+     *
+     * @param xPos      what x position to create it at
+     * @param yPos      what y position to create it at
+     * @param imagePath the filepath to the image used for the token
+     * @param parentMap the map the token is on
+     * @param tokenId   a unique id to give
+     */
+    public TableTopToken(float xPos, float yPos, String imagePath, TableTopMap parentMap, int layer, Player creator, String tokenID) {
+        textureRegion = new TextureRegion(EngineManager.getTexture(imagePath));
+        valuesCurrent = new float[NUMBER_OF_VALUES];
+        valuesMax = new float[NUMBER_OF_VALUES];
+        this.parentMap = parentMap;
+        owners = new LinkedList<>();
+        owners.add(creator);
+        parentMap.addToken(this, TableTopMap.Layer.TOKEN);
+        parentMap.setSaved(false);
+        this.texturePath = imagePath;
+        position = new Vector3(xPos, yPos * EngineManager.getRatio(), 0);
+        if (owners.contains(EngineManager.getCurrentPlayer())) enableOmniLight(new Color(100f, 100f, 100f, 0.2f), 70);
+        coneLight = null;
+        this.setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+        setWidth(DEFAULT_WIDTH);
+        setHeight(DEFAULT_HEIGHT);
+        this.setPosition(xPos, yPos);
+        this.layer = layer;
+        addClickListeners();
+        this.tokenID = tokenID;
 
     }
 
@@ -291,6 +325,10 @@ public class TableTopToken extends Image {
         }
         width = Math.max(width, DEFAULT_WIDTH);
         height = Math.max(height, DEFAULT_HEIGHT);
+    }
+
+    public String getTokenID() {
+        return tokenID;
     }
 }
 

@@ -16,7 +16,7 @@ public class Command {
     public enum CommandType {
         RESPONSE,
         CONNECT,
-        CHECKIN,
+        CHECK_IN,
         TOKEN,
         MOVE,
         CHANGE_IMAGE,
@@ -27,7 +27,8 @@ public class Command {
         NEW_MAP,
         MOVE_TO_MAP,
         MOVE_ALL_TO_MAP,
-        CHAT;
+        CHAT,
+        NEW_FILE;
     }
 
 }

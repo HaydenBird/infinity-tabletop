@@ -70,6 +70,7 @@ public class UIManager {
     private static VisTree.Node pcNode;
     private static VisTree.Node npcNode;
     private static VisTree.Node handoutNode;
+    private static Menu networkMenu;
 
     /**
      * This method is used to build the UI and set up the stage
@@ -193,9 +194,18 @@ public class UIManager {
         buildFileMenu();
         buildTokenMenu();
         buildMapMenu();
+        buildNetworkMenu();
         container.add(menuBar.getTable()).fill().top().prefHeight(container.getHeight() / 10).colspan(12);
         container.row();
 
+    }
+
+    private static void buildNetworkMenu() {
+        networkMenu = new Menu("Network");
+        fileMenu.addItem(new MenuItem("Connect"));
+        fileMenu.addItem(new MenuItem("Disconnect"));
+        fileMenu.addItem(new MenuItem("Change Display Name"));
+        fileMenu.addItem(new MenuItem(""));
     }
 
     /**

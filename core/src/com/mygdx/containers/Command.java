@@ -1,16 +1,31 @@
 package com.mygdx.containers;
 
+import java.net.Socket;
+import java.util.List;
+
 public class Command {
 
 
     private CommandType type;
+    private List<String> arguments;
+    private Socket originSocket;
 
-    public Command(CommandType type) {
+    public Command(CommandType type, List<String> arguments, Socket originSocket) {
         this.type = type;
+        this.arguments = arguments;
+        this.originSocket = originSocket;
     }
 
     public CommandType getType() {
         return type;
+    }
+
+    public String get(int i) {
+        return arguments.get(i);
+    }
+
+    public Socket getSocket() {
+        return originSocket;
     }
 
     public enum CommandType {
@@ -28,7 +43,7 @@ public class Command {
         MOVE_TO_MAP,
         MOVE_ALL_TO_MAP,
         CHAT,
-        NEW_FILE;
+        NEW_FILE
     }
 
 }

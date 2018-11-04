@@ -8,6 +8,7 @@ import com.mygdx.containers.Command;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -70,6 +71,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class NetworkManager {
 
     private static ServerSocket serverSocket;
+    private static List<Socket> sockets;
     private static Queue<Command> commandQueue; //This is the only place in which the networking threads will communicate with the main thread
 
     public static void startServer(String host, int port) {
@@ -125,39 +127,43 @@ public class NetworkManager {
 
     private static void newFile(Command currentCommand) {
         //Check to see if we have a file with that name
-        //If yes then
-        //Check to see if the hash is the same
-        //If Yes, send response saying so
-        //If no, overwrite
+        File file = new File(currentCommand.get(0));
+        if (file.exists()) {
+            //If yes then
+            //Check to see if the hash is the same
+            //If Yes, send response saying so and return
+            //If no, overwrite
+        }
         //If no then continue
         //Receive the file
+        try {
+            recieveFile(file, currentCommand.getSocket(), Integer.parseInt(currentCommand.get(1)));
+        } catch (IOException e) {
+            //Sends response
+        }
+
     }
 
 
-    private static void recieveFile(String filename, Socket socket, int fileSize) throws IOException {
-        File file = new File(filename);
+    private static void recieveFile(File file, Socket socket, int fileSize) throws IOException {
         int bytesRead;
         int current;
         FileOutputStream fos = null;
         BufferedOutputStream bos = null;
         try {
             // receive file
-            byte[] bytearray = new byte[fileSize];
+            byte[] byteArray = new byte[fileSize];
             InputStream is = socket.getInputStream();
             fos = new FileOutputStream(file);
             bos = new BufferedOutputStream(fos);
-            bytesRead = is.read(bytearray, 0, bytearray.length);
+            bytesRead = is.read(byteArray, 0, byteArray.length);
             current = bytesRead;
-
             do {
-                bytesRead =
-                        is.read(bytearray, current, (bytearray.length - current));
+                bytesRead = is.read(byteArray, current, (byteArray.length - current));
                 if (bytesRead >= 0) current += bytesRead;
             } while (bytesRead > -1);
-
-            bos.write(bytearray, 0, current);
+            bos.write(byteArray, 0, current);
             bos.flush();
-
         } finally {
             if (fos != null) fos.close();
             if (bos != null) bos.close();
@@ -165,7 +171,7 @@ public class NetworkManager {
     }
 
     private static void sendFile(Socket sock, String filepath) throws IOException {
-        FileInputStream fis = null;
+        FileInputStream fis;
         BufferedInputStream bis = null;
         OutputStream os = null;
         try {
@@ -174,12 +180,12 @@ public class NetworkManager {
                 try {
                     // send file
                     File myFile = new File(filepath);
-                    byte[] mybytearray = new byte[(int) myFile.length()];
+                    byte[] byteArray = new byte[(int) myFile.length()];
                     fis = new FileInputStream(myFile);
                     bis = new BufferedInputStream(fis);
-                    bis.read(mybytearray, 0, mybytearray.length);
+                    bis.read(byteArray, 0, byteArray.length);
                     os = sock.getOutputStream();
-                    os.write(mybytearray, 0, mybytearray.length);
+                    os.write(byteArray, 0, byteArray.length);
                     os.flush();
                 } finally {
                     if (bis != null) bis.close();

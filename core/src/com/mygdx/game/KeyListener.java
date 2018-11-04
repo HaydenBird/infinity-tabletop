@@ -4,7 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
-import com.mygdx.managers.EngineManager;
+import com.mygdx.managers.MapManager;
 import sun.security.ssl.Debug;
 
 import java.util.List;
@@ -22,9 +22,9 @@ public class KeyListener extends InputListener {
     public boolean scrolled(InputEvent event, float x, float y, int amount) {
         Debug.println("Scrolled", "x: " + x + ", y: " + y + ", amount: " + amount);
         if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) { //Zoom if ctrl+scroll
-            EngineManager.zoomMap(-amount, renderer);
+            MapManager.zoomMap(-amount, renderer);
         } else {//Otherwise pan
-            EngineManager.translateMap(0, 10 * amount, renderer);
+            MapManager.translateMap(0, 10 * amount, renderer);
         }
         return true;
     }
@@ -32,7 +32,7 @@ public class KeyListener extends InputListener {
     @Override
     public boolean keyDown(InputEvent event, int keycode) {
         Debug.println("Key down", "Key is " + Input.Keys.toString(keycode));
-        List<TableTopToken> tokens = EngineManager.getSelectedTokens();
+        List<TableTopToken> tokens = MapManager.getSelectedTokens();
         if (tokens.size() == 0 || tokens == null) return false;
         for (TableTopToken token : tokens) {
             switch (keycode) {

@@ -14,6 +14,7 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.mygdx.managers.EngineManager;
+import com.mygdx.managers.MapManager;
 import com.mygdx.managers.NetworkManager;
 import com.mygdx.managers.UIManager;
 
@@ -43,7 +44,7 @@ public class TableTopRenderer {
         EngineManager.setRenderer(this);
         for (int i = 0; i <= 8; i++) {
             dragBoxes[i] = new DragBox(i, "assets/badlogic.jpg");
-            EngineManager.getMapStage().addActor(dragBoxes[i]);
+            MapManager.getMapStage().addActor(dragBoxes[i]);
         }
     }
 
@@ -62,13 +63,13 @@ public class TableTopRenderer {
      * @param batch      The batch that will handle rendering the tokens
      */
     public void render(RayHandler rayHandler, SpriteBatch batch) {
-        Stage mapStage = EngineManager.getMapStage();
-        World world = EngineManager.getCurrentMap().getWorld();
+        Stage mapStage = MapManager.getMapStage();
+        World world = MapManager.getCurrentMap().getWorld();
         world.step(Gdx.graphics.getDeltaTime(), 6, 2);
         //Render a generic background
         renderGrid(Color.LIGHT_GRAY, Color.RED, 50, 50, batch);
         //Render the Map
-        TableTopMap currentMap = EngineManager.getCurrentMap();
+        TableTopMap currentMap = MapManager.getCurrentMap();
         TextureRegion textureRegion;
 
         batch.begin();
@@ -112,7 +113,7 @@ public class TableTopRenderer {
         //Render overall background
         TextureRegion mapBackground = UIManager.makeFlatColor(Color.DARK_GRAY); //Create the background for outside the grid
         TextureRegion gridBackground = UIManager.makeFlatColor(background); //Create the background of the grid
-        OrthographicCamera mapCam = (OrthographicCamera) EngineManager.getMapStage().getCamera();
+        OrthographicCamera mapCam = (OrthographicCamera) MapManager.getMapStage().getCamera();
         if (gridLines == null) { //Create grid texture only if we dont already have one
             gridLines = createLines(width, height, lines);
         }
@@ -134,7 +135,7 @@ public class TableTopRenderer {
      * @param batch the batch used to render the resizing boxes
      */
     private void drawSelection(Batch batch) {
-        List<TableTopToken> currentlySelectedToken = EngineManager.getSelectedTokens();
+        List<TableTopToken> currentlySelectedToken = MapManager.getSelectedTokens();
         if (currentlySelectedToken == null || currentlySelectedToken.size() == 0) return;
         //find the leftmost, rightmost, up most, and down most points
         float minX = Float.MAX_VALUE;
@@ -153,7 +154,7 @@ public class TableTopRenderer {
         }
         float width = maxX - minX;
         float height = maxY - minY;
-        shapeRenderer.setProjectionMatrix(EngineManager.getMapStage().getCamera().combined);
+        shapeRenderer.setProjectionMatrix(MapManager.getMapStage().getCamera().combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         shapeRenderer.setColor(Color.CYAN);
         shapeRenderer.rect(minX - 5, minY - 5, width + 10, height + 10);

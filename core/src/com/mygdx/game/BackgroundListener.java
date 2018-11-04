@@ -3,7 +3,7 @@ package com.mygdx.game;
 import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.mygdx.managers.EngineManager;
+import com.mygdx.managers.MapManager;
 
 /**
  * This class is used to allow panning
@@ -40,7 +40,7 @@ public class BackgroundListener extends ClickListener implements GestureDetector
 
     @Override
     public boolean pan(float x, float y, float deltaX, float deltaY) {
-        EngineManager.translateMap(deltaX, deltaY, renderer);
+        MapManager.translateMap(deltaX, deltaY, renderer);
         return true;
     }
 

@@ -13,6 +13,7 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.utils.DragListener;
 import com.mygdx.managers.EngineManager;
+import com.mygdx.managers.MapManager;
 import com.mygdx.managers.UIManager;
 
 /**
@@ -39,25 +40,25 @@ public class MyGdxGame extends Game {
         renderer = new TableTopRenderer(); //Initialize the renderer
         this.setScreen(new TableTopMap("New Map", this, true)); //Set the currently rendered map to be a new one
         rayHandler = EngineManager.getRayHandler(world); //Initialize and set up the ray handler
-        EngineManager.setCurrentMap(EngineManager.getCurrentMap());
+        MapManager.setCurrentMap(MapManager.getCurrentMap());
         UIManager.setGame(this);
         //Test tokens for the map
-        TableTopToken t = new TableTopToken(0, 0 / EngineManager.getRatio(), "assets/badlogic.jpg", EngineManager.getCurrentMap(), TableTopMap.Layer.TOKEN, EngineManager.getCurrentPlayer());
-        TableTopToken t2 = new TableTopToken(200, 200 / EngineManager.getRatio(), "assets/badlogic.jpg", EngineManager.getCurrentMap(), TableTopMap.Layer.BLOCKING, EngineManager.getCurrentPlayer());
-        TableTopToken t3 = new TableTopToken(200, 0 / EngineManager.getRatio(), "assets/badlogic.jpg", EngineManager.getCurrentMap(), TableTopMap.Layer.MAP, EngineManager.getCurrentPlayer());
+        TableTopToken t = new TableTopToken(0, 0 / EngineManager.getRatio(), "assets/badlogic.jpg", MapManager.getCurrentMap(), TableTopMap.Layer.TOKEN, EngineManager.getCurrentPlayer());
+        TableTopToken t2 = new TableTopToken(200, 200 / EngineManager.getRatio(), "assets/badlogic.jpg", MapManager.getCurrentMap(), TableTopMap.Layer.BLOCKING, EngineManager.getCurrentPlayer());
+        TableTopToken t3 = new TableTopToken(200, 0 / EngineManager.getRatio(), "assets/badlogic.jpg", MapManager.getCurrentMap(), TableTopMap.Layer.MAP, EngineManager.getCurrentPlayer());
         t2.enableOmniLight(Color.WHITE, 1000);
-        t.createBody(EngineManager.getCurrentMap().getWorld());
+        t.createBody(MapManager.getCurrentMap().getWorld());
 
-        EngineManager.getMapStage().addListener(new KeyListener(renderer)); //Add a listener for zooming
+        MapManager.getMapStage().addListener(new KeyListener(renderer)); //Add a listener for zooming
         inputMultiplexer.addProcessor(UIManager.getStage()); //Add all the things that need to have inputs handled to the multiplexer
-        inputMultiplexer.addProcessor(EngineManager.getMapStage());
+        inputMultiplexer.addProcessor(MapManager.getMapStage());
         GestureDetector gestureDetector = new GestureDetector(new BackgroundListener(renderer));
         inputMultiplexer.addProcessor(gestureDetector);
         Gdx.input.setInputProcessor(inputMultiplexer);
-        EngineManager.getMapStage().addListener(new DragListener() { //Enable dragging with rightclick
+        MapManager.getMapStage().addListener(new DragListener() { //Enable dragging with rightclick
             public void drag(InputEvent event, float x, float y, int pointer) {
                 if (this.getButton() == 1) {
-                    EngineManager.translateMap(x, y, renderer);
+                    MapManager.translateMap(x, y, renderer);
                 }
             }
         });
@@ -91,10 +92,10 @@ public class MyGdxGame extends Game {
     @Override
     public void resize(int width, int height) {
         UIManager.getStage().getViewport().update(width, height, true);
-        EngineManager.getMapStage().getViewport().update(width, height);
+        MapManager.getMapStage().getViewport().update(width, height);
         EngineManager.getCamera().update();
-        OrthographicCamera mC = (OrthographicCamera) EngineManager.getMapStage().getCamera();
+        OrthographicCamera mC = (OrthographicCamera) MapManager.getMapStage().getCamera();
         mC.setToOrtho(false, width, height);
-        EngineManager.getMapStage().getCamera().update();
+        MapManager.getMapStage().getCamera().update();
     }
 }

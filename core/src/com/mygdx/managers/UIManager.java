@@ -120,7 +120,7 @@ public class UIManager {
             public void switchedTab(Tab tab) {
                 super.switchedTab(tab);
                 MapTab newCurrent = (MapTab) tab;
-                EngineManager.setCurrentMap(newCurrent.getMap());
+                MapManager.setCurrentMap(newCurrent.getMap());
             }
         });
         mapPaneWindow = mapPanes.getTable();
@@ -247,24 +247,24 @@ public class UIManager {
         mapLayer.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                EngineManager.setLayer(TableTopMap.Layer.MAP);
-                EngineManager.clearSelectedTokens();
+                MapManager.setLayer(TableTopMap.Layer.MAP);
+                MapManager.clearSelectedTokens();
             }
         });
 
         blockingLayer.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                EngineManager.setLayer(TableTopMap.Layer.BLOCKING);
-                EngineManager.clearSelectedTokens();
+                MapManager.setLayer(TableTopMap.Layer.BLOCKING);
+                MapManager.clearSelectedTokens();
             }
         });
 
         tokenLayer.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                EngineManager.setLayer(TableTopMap.Layer.TOKEN);
-                EngineManager.clearSelectedTokens();
+                MapManager.setLayer(TableTopMap.Layer.TOKEN);
+                MapManager.clearSelectedTokens();
             }
         });
         tokenLayer.setChecked(true);
@@ -285,30 +285,30 @@ public class UIManager {
         mapLayer.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                for (TableTopToken token : EngineManager.getSelectedTokens()) {
+                for (TableTopToken token : MapManager.getSelectedTokens()) {
                     token.setLayer(TableTopMap.Layer.MAP);
                 }
-                EngineManager.setLayer(TableTopMap.Layer.MAP);
+                MapManager.setLayer(TableTopMap.Layer.MAP);
             }
         });
 
         blockingLayer.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                for (TableTopToken token : EngineManager.getSelectedTokens()) {
+                for (TableTopToken token : MapManager.getSelectedTokens()) {
                     token.setLayer(TableTopMap.Layer.BLOCKING);
                 }
-                EngineManager.setLayer(TableTopMap.Layer.BLOCKING);
+                MapManager.setLayer(TableTopMap.Layer.BLOCKING);
             }
         });
 
         tokenLayer.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                for (TableTopToken token : EngineManager.getSelectedTokens()) {
+                for (TableTopToken token : MapManager.getSelectedTokens()) {
                     token.setLayer(TableTopMap.Layer.TOKEN);
                 }
-                EngineManager.setLayer(TableTopMap.Layer.TOKEN);
+                MapManager.setLayer(TableTopMap.Layer.TOKEN);
             }
         });
         tokenLayer.setChecked(true);
@@ -335,7 +335,7 @@ public class UIManager {
                         Dialogs.showInputDialog(getStage(), "Light distance", "Distance: ", new InputDialogAdapter() {
                             @Override
                             public void finished(String input) {
-                                for (TableTopToken token : EngineManager.getSelectedTokens()) {
+                                for (TableTopToken token : MapManager.getSelectedTokens()) {
                                     token.enableOmniLight(newColor, Integer.parseInt(input) * 110);
                                 }
 
@@ -403,9 +403,9 @@ public class UIManager {
         fileChooser.setListener(new FileChooserAdapter() {
             @Override
             public void selected(Array<FileHandle> file) {
-                TableTopToken newToken = new TableTopToken(EngineManager.getMapStage().getCamera().position.x, EngineManager.getMapStage().getCamera().position.y,
-                        file.get(0).path(), EngineManager.getCurrentMap(), layer, EngineManager.getCurrentPlayer());
-                EngineManager.getCurrentMap().addToken(newToken, layer);
+                TableTopToken newToken = new TableTopToken(MapManager.getMapStage().getCamera().position.x, MapManager.getMapStage().getCamera().position.y,
+                        file.get(0).path(), MapManager.getCurrentMap(), layer, EngineManager.getCurrentPlayer());
+                MapManager.getCurrentMap().addToken(newToken, layer);
             }
         });
         getStage().addActor(fileChooser.fadeIn());

@@ -14,6 +14,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.DragListener;
 import com.mygdx.managers.EngineManager;
+import com.mygdx.managers.MapManager;
 import com.mygdx.tabletop.Entry;
 import com.mygdx.tabletop.Player;
 import sun.security.ssl.Debug;
@@ -80,6 +81,8 @@ public class TableTopToken extends Image {
      * @param yPos      what y position to create it at
      * @param imagePath the filepath to the image used for the token
      * @param parentMap the map the token is on
+     * @param layer
+     * @param creator
      * @param tokenId   a unique id to give
      */
     public TableTopToken(float xPos, float yPos, String imagePath, TableTopMap parentMap, int layer, Player creator, String tokenID) {
@@ -113,28 +116,28 @@ public class TableTopToken extends Image {
         this.addListener(new DragListener() {
             public void drag(InputEvent event, float x, float y, int pointer) {
                 Debug.println("Dragging", "X: " + x + ", Y: " + y);
-                if (!EngineManager.getSelectedTokens().contains(thisToken)) {
+                if (!MapManager.getSelectedTokens().contains(thisToken)) {
                     if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) {
-                        EngineManager.setSelectedToken(thisToken);
+                        MapManager.setSelectedToken(thisToken);
                     } else {
-                        EngineManager.clearSelectedTokens();
-                        EngineManager.setSelectedToken(thisToken);
+                        MapManager.clearSelectedTokens();
+                        MapManager.setSelectedToken(thisToken);
                     }
 
 
                 }
-                for (TableTopToken a : EngineManager.getSelectedTokens()) {
+                for (TableTopToken a : MapManager.getSelectedTokens()) {
                     a.position.x += x;
                     a.position.y += y;
                     a.setPosition(a.position.x - a.getWidth() / 2, a.position.y - a.getHeight() / 2);
-                    EngineManager.getMapStage().getCamera().update();
+                    MapManager.getMapStage().getCamera().update();
                 }
 
             }
 
             public void dragStop(InputEvent event, float x, float y, int pointer) {
 
-                for (TableTopToken a : EngineManager.getSelectedTokens()) {
+                for (TableTopToken a : MapManager.getSelectedTokens()) {
                     a.snapToGrid(a.position.x, a.position.y);
                 }
             }
@@ -143,14 +146,14 @@ public class TableTopToken extends Image {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) {
-                    if (EngineManager.getSelectedTokens().contains(thisToken)) {
-                        EngineManager.getSelectedTokens().remove(thisToken);
+                    if (MapManager.getSelectedTokens().contains(thisToken)) {
+                        MapManager.getSelectedTokens().remove(thisToken);
                     } else {
-                        EngineManager.setSelectedToken(thisToken);
+                        MapManager.setSelectedToken(thisToken);
                     }
                 } else {
-                    EngineManager.clearSelectedTokens();
-                    EngineManager.setSelectedToken(thisToken);
+                    MapManager.clearSelectedTokens();
+                    MapManager.setSelectedToken(thisToken);
                 }
             }
         });

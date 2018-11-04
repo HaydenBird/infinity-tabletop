@@ -5,6 +5,7 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.utils.DragListener;
 import com.mygdx.managers.EngineManager;
+import com.mygdx.managers.MapManager;
 import sun.security.ssl.Debug;
 
 import java.util.List;
@@ -68,7 +69,7 @@ public class DragBox extends Image {
      */
     private void setDragListener(float xMultiplier, float yMultiplier, float moveX, float moveY) {
         DragBox dragBox = this;
-        List<TableTopToken> tokens = EngineManager.getSelectedTokens();
+        List<TableTopToken> tokens = MapManager.getSelectedTokens();
         Debug.println("Dragbox listener made", "");
         this.addListener(new DragListener() {
             @Override
@@ -83,7 +84,7 @@ public class DragBox extends Image {
                     token.setY(token.getY() + y * moveY);
                     token.setPosition(token.getX(), token.getY());
                 }
-                EngineManager.getMapStage().getCamera().update();
+                MapManager.getMapStage().getCamera().update();
             }
 
             public void dragStop(InputEvent event, float x, float y, int pointer) {

@@ -3,7 +3,7 @@ package com.mygdx.game;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
-import com.mygdx.managers.EngineManager;
+import com.mygdx.managers.MapManager;
 import com.mygdx.managers.UIManager;
 
 import java.util.LinkedList;
@@ -32,7 +32,7 @@ public class TableTopMap implements Screen {
                 this.tokenLayerTokens.add(token);
                 break;
         }
-        EngineManager.getMapStage().addActor(token);
+        MapManager.getMapStage().addActor(token);
         this.isSaved = false;
     }
 

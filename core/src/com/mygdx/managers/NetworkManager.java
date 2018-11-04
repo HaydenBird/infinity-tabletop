@@ -60,13 +60,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * Chat message sent
  * chat [message 1] [rolls 1] ... [message n] [rolls n] [style] [from] [gm only true/false] [message id]
  *
- *
- *
- *
- *
- *
- *
- *
  */
 public class NetworkManager {
 
@@ -90,6 +83,7 @@ public class NetworkManager {
 
     public static void handleNextCommand() {
         Command currentCommand = getNextCommand();
+        if (currentCommand == null) return;
         switch (currentCommand.getType()) {
             case RESPONSE:
                 break;

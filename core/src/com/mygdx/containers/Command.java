@@ -76,6 +76,56 @@ public class Command {
         }
     }
 
+    public static String commandTypeToString(CommandType type) {
+        switch (type) {
+            case RESPONSE:
+                return "response";
+            case CONNECT:
+                return "connect";
+            case CHECK_IN:
+                return "checkin";
+            case TOKEN:
+                return "token";
+            case MOVE:
+                return "move";
+            case CHANGE_IMAGE:
+                return "changeimage";
+            case LIGHT_CHANGE:
+                return "lightchange";
+            case ASSOCIATE:
+                return "associate";
+            case NEW_ENTRY:
+                return "newentry";
+            case LINK_ENTRY:
+                return "linkentry";
+            case NEW_MAP:
+                return "newmap";
+            case MOVE_TO_MAP:
+                return "movetomap";
+            case MOVE_ALL_TO_MAP:
+                return "movealltomap";
+            case CHAT:
+                return "chat";
+            case NEW_FILE:
+                return "newfile";
+            case NEW_ASSET:
+                return "newasset";
+            case ADD_OWNER:
+                return "addowner";
+            case REMOVE_OWNER:
+                return "removeowner";
+            case REMOVE_TOKEN:
+                return "removetoken";
+            case REMOVE_MAP:
+                return "removemap";
+            case REMOVE_ENTRY:
+                return "removeentry";
+            case ERROR:
+                return "error";
+        }
+        return "error";
+    }
+
     public enum CommandType {
         RESPONSE,
         CONNECT,
@@ -102,4 +152,8 @@ public class Command {
 
     }
 
+    @Override
+    public String toString() {
+        return super.toString();
+    }
 }

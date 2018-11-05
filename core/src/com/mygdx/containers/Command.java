@@ -149,11 +149,16 @@ public class Command {
         REMOVE_MAP,
         REMOVE_ENTRY,
         ERROR
-
     }
 
     @Override
     public String toString() {
-        return super.toString();
+        String commandString;
+        commandString = commandTypeToString(type);
+        for (String s : arguments) {
+            commandString += " ";
+            commandString += s;
+        }
+        return commandString;
     }
 }

@@ -43,6 +43,8 @@ public class TableTopToken extends Image {
 
     private final TextureRegion textureRegion;
 
+    private PointLight selfLight;
+
     /**
      * The constructor for a token
      *
@@ -62,49 +64,17 @@ public class TableTopToken extends Image {
         parentMap.setSaved(false);
         this.texturePath = imagePath;
         position = new Vector3(xPos, yPos * EngineManager.getRatio(), 0);
-        if (owners.contains(EngineManager.getCurrentPlayer())) enableOmniLight(new Color(100f, 100f, 100f, 0.2f), 70);
+        if (owners.contains(EngineManager.getCurrentPlayer())) {
+            selfLight = new PointLight(EngineManager.getRayHandler(parentMap.getWorld()), 128, Color.WHITE, 50, this.getX(), this.getY());
+        }
         coneLight = null;
         this.setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
         setWidth(DEFAULT_WIDTH);
         setHeight(DEFAULT_HEIGHT);
         this.setPosition(xPos, yPos);
-        this.layer = layer;
+        setLayer(layer);
         addClickListeners();
         tokenID = UUID.randomUUID().toString();
-
-    }
-
-    /**
-     * The constructor for a token
-     *
-     * @param xPos      what x position to create it at
-     * @param yPos      what y position to create it at
-     * @param imagePath the filepath to the image used for the token
-     * @param parentMap the map the token is on
-     * @param layer
-     * @param creator
-     * @param tokenId   a unique id to give
-     */
-    public TableTopToken(float xPos, float yPos, String imagePath, TableTopMap parentMap, int layer, Player creator, String tokenID) {
-        textureRegion = new TextureRegion(EngineManager.getTexture(imagePath));
-        valuesCurrent = new float[NUMBER_OF_VALUES];
-        valuesMax = new float[NUMBER_OF_VALUES];
-        this.parentMap = parentMap;
-        owners = new LinkedList<>();
-        owners.add(creator);
-        parentMap.addToken(this, TableTopMap.Layer.TOKEN);
-        parentMap.setSaved(false);
-        this.texturePath = imagePath;
-        position = new Vector3(xPos, yPos * EngineManager.getRatio(), 0);
-        if (owners.contains(EngineManager.getCurrentPlayer())) enableOmniLight(new Color(100f, 100f, 100f, 0.2f), 70);
-        coneLight = null;
-        this.setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
-        setWidth(DEFAULT_WIDTH);
-        setHeight(DEFAULT_HEIGHT);
-        this.setPosition(xPos, yPos);
-        this.layer = layer;
-        addClickListeners();
-        this.tokenID = tokenID;
 
     }
 
@@ -169,6 +139,40 @@ public class TableTopToken extends Image {
     private float[] valuesMax;
     private ConeLight coneLight;
     private PointLight omniLight;
+
+    /**
+     * The constructor for a token
+     *
+     * @param xPos      what x position to create it at
+     * @param yPos      what y position to create it at
+     * @param imagePath the filepath to the image used for the token
+     * @param parentMap the map the token is on
+     * @param layer
+     * @param creator
+     * @param tokenID   a unique id to give
+     */
+    public TableTopToken(float xPos, float yPos, String imagePath, TableTopMap parentMap, int layer, Player creator, String tokenID) {
+        textureRegion = new TextureRegion(EngineManager.getTexture(imagePath));
+        valuesCurrent = new float[NUMBER_OF_VALUES];
+        valuesMax = new float[NUMBER_OF_VALUES];
+        this.parentMap = parentMap;
+        owners = new LinkedList<>();
+        owners.add(creator);
+        parentMap.addToken(this, TableTopMap.Layer.TOKEN);
+        parentMap.setSaved(false);
+        this.texturePath = imagePath;
+        position = new Vector3(xPos, yPos * EngineManager.getRatio(), 0);
+        if (owners.contains(EngineManager.getCurrentPlayer())) enableOmniLight(new Color(100f, 100f, 100f, 0.2f), 70);
+        coneLight = null;
+        this.setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+        setWidth(DEFAULT_WIDTH);
+        setHeight(DEFAULT_HEIGHT);
+        this.setPosition(xPos, yPos);
+        this.layer = layer;
+        addClickListeners();
+        this.tokenID = tokenID;
+
+    }
     private boolean omnidirectionalLightOn = false, coneLightOn = false;
     private String texturePath;
 
@@ -189,6 +193,10 @@ public class TableTopToken extends Image {
 
         if (body != null) {
             body.setTransform(position.x + width / 2, position.y + height / 2, 0);
+        }
+
+        if (selfLight != null) {
+            selfLight.setPosition(position.x + width / 2, position.y + height / 2);
         }
     }
 
@@ -301,6 +309,11 @@ public class TableTopToken extends Image {
 
     public void setLayer(int layer) {
         this.layer = layer;
+        if (layer == TableTopMap.Layer.TOKEN && this.owners.contains(EngineManager.getCurrentPlayer())) {
+            selfLight.setActive(true);
+        } else {
+            selfLight.setActive(false);
+        }
     }
 
 
@@ -315,7 +328,6 @@ public class TableTopToken extends Image {
     }
 
     public void snapToSize() {
-
         Debug.println("Snap to size", "Width=" + this.getWidth() + ", Height=" + this.getHeight());
         if (Gdx.input.isKeyPressed(Input.Keys.ALT_LEFT)) {
             this.setPosition(this.getX(), this.getY());
@@ -328,6 +340,10 @@ public class TableTopToken extends Image {
         }
         width = Math.max(width, DEFAULT_WIDTH);
         height = Math.max(height, DEFAULT_HEIGHT);
+        MapManager.getCurrentMap().getWorld().destroyBody(body);
+        createBody(MapManager.getCurrentMap().getWorld());
+        super.setHeight(height);
+        super.setWidth(width);
     }
 
     public String getTokenID() {

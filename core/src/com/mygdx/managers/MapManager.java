@@ -150,4 +150,9 @@ public class MapManager {
     }
 
 
+    public static void clean() {
+        currentMap = null;
+        layer = TableTopMap.Layer.TOKEN;
+        clearSelectedTokens();
+    }
 }

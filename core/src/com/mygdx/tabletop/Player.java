@@ -39,4 +39,16 @@ public class Player {
         this.playerSocket = newSocket;
         return true;
     }
+
+    public String getDisplayName() {
+        return "";
+    }
+
+    public String getUserId() {
+        return "";
+    }
+
+    public String promptPassword() {
+        return "";
+    }
 }

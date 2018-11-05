@@ -1,6 +1,7 @@
 package com.mygdx.containers;
 
-import java.net.Socket;
+import com.badlogic.gdx.net.Socket;
+
 import java.util.List;
 
 public class Command {

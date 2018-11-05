@@ -58,7 +58,6 @@ public class EngineManager {
         UIManager.init();
         MapManager.getInstance();
         initPlayer();
-
     }
 
     /**
@@ -189,8 +188,7 @@ public class EngineManager {
      */
     public static void createNewCampaign() {
         clean();
-        loadedCampaign = new Campaign();
-        NetworkManager.startServer("", 0);
+        NetworkManager.getInstance().startServer(0);
         ListManager.nukeLists();
 
 
@@ -203,7 +201,9 @@ public class EngineManager {
      * @param port      the port to connect on
      */
     public static void joinNetworkGame(String ipAddress, String port) {
-
+        clean();
+        MapManager.clean();
+        NetworkManager.getInstance().connectToServer(ipAddress, Integer.parseInt(port));
 
     }
 

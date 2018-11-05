@@ -4,14 +4,17 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Net.Protocol;
 import com.badlogic.gdx.net.ServerSocket;
 import com.badlogic.gdx.net.ServerSocketHints;
+import com.badlogic.gdx.net.Socket;
+import com.badlogic.gdx.net.SocketHints;
 import com.mygdx.containers.Command;
+import sun.security.ssl.Debug;
 
 import java.io.*;
-import java.net.Socket;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  *
@@ -74,13 +77,66 @@ public class NetworkManager {
     private static ServerSocket serverSocket;
     private static List<Socket> sockets;
     private static Queue<Command> commandQueue; //This is the only place in which the networking threads will communicate with the main thread
+    private static NetworkManager instance;
+    private ServerSocketHints serverHints;
+    private Socket clientSocket;
 
-    public static void startServer(String host, int port) {
-        commandQueue = new ConcurrentLinkedQueue<>();
-        ServerSocketHints serverHints = new ServerSocketHints();
-        serverSocket = Gdx.net.newServerSocket(Protocol.TCP, host, port, serverHints);
+    public NetworkManager() {
+        sockets = new CopyOnWriteArrayList<>();
 
     }
+
+    public static NetworkManager getInstance() {
+        if (instance == null) {
+            instance = new NetworkManager();
+        }
+        return instance;
+    }
+
+    private static void newFile(Command currentCommand) {
+        //Check to see if we have a file with that name
+        File file = new File(currentCommand.get(0));
+        if (file.exists()) {
+            //If yes then
+            //Check to see if the hash is the same
+            //If Yes, send response saying so and return
+            //If no, overwrite
+        }
+        //If no then continue
+        //Receive the file
+        try {
+            receiveFile(file, currentCommand.getSocket(), Integer.parseInt(currentCommand.get(1)));
+        } catch (IOException e) {
+            //Sends response
+        }
+
+    }
+
+    private static void receiveFile(File file, Socket socket, int fileSize) throws IOException {
+        int bytesRead;
+        int current;
+        FileOutputStream fos = null;
+        BufferedOutputStream bos = null;
+        try {
+            // receive file
+            byte[] byteArray = new byte[fileSize];
+            InputStream is = socket.getInputStream();
+            fos = new FileOutputStream(file);
+            bos = new BufferedOutputStream(fos);
+            bytesRead = is.read(byteArray, 0, byteArray.length);
+            current = bytesRead;
+            do {
+                bytesRead = is.read(byteArray, current, (byteArray.length - current));
+                if (bytesRead >= 0) current += bytesRead;
+            } while (bytesRead > -1);
+            bos.write(byteArray, 0, current);
+            bos.flush();
+        } finally {
+            if (fos != null) fos.close();
+            if (bos != null) bos.close();
+        }
+    }
+
     public static void clearCommandQueue() {
         //TODO: clear command queue
     }
@@ -127,49 +183,18 @@ public class NetworkManager {
         }
     }
 
-    private static void newFile(Command currentCommand) {
-        //Check to see if we have a file with that name
-        File file = new File(currentCommand.get(0));
-        if (file.exists()) {
-            //If yes then
-            //Check to see if the hash is the same
-            //If Yes, send response saying so and return
-            //If no, overwrite
-        }
-        //If no then continue
-        //Receive the file
-        try {
-            recieveFile(file, currentCommand.getSocket(), Integer.parseInt(currentCommand.get(1)));
-        } catch (IOException e) {
-            //Sends response
-        }
+    private static void sendMessage(Socket socket, Command command) {
 
     }
 
+    public void startServer(int port) {
+        commandQueue = new ConcurrentLinkedQueue<>();
+        serverHints = new ServerSocketHints();
+        serverHints.acceptTimeout = 0;
+        serverSocket = Gdx.net.newServerSocket(Protocol.TCP, port, serverHints);
+        ListenForPlayers listen = new ListenForPlayers();
+        listen.start();
 
-    private static void recieveFile(File file, Socket socket, int fileSize) throws IOException {
-        int bytesRead;
-        int current;
-        FileOutputStream fos = null;
-        BufferedOutputStream bos = null;
-        try {
-            // receive file
-            byte[] byteArray = new byte[fileSize];
-            InputStream is = socket.getInputStream();
-            fos = new FileOutputStream(file);
-            bos = new BufferedOutputStream(fos);
-            bytesRead = is.read(byteArray, 0, byteArray.length);
-            current = bytesRead;
-            do {
-                bytesRead = is.read(byteArray, current, (byteArray.length - current));
-                if (bytesRead >= 0) current += bytesRead;
-            } while (bytesRead > -1);
-            bos.write(byteArray, 0, current);
-            bos.flush();
-        } finally {
-            if (fos != null) fos.close();
-            if (bos != null) bos.close();
-        }
     }
 
     private static void sendFile(Socket sock, String filepath) throws IOException {
@@ -192,7 +217,6 @@ public class NetworkManager {
                 } finally {
                     if (bis != null) bis.close();
                     if (os != null) os.close();
-                    if (sock != null) sock.close();
                 }
             }
         } finally {
@@ -211,20 +235,69 @@ public class NetworkManager {
         return newCommand;
     }
 
+    public void connectToServer(String host, int port) {
+        clientSocket = Gdx.net.newClientSocket(Protocol.TCP, host, port, null);
+        ListenForCommand commandListener = new ListenForCommand(clientSocket);
+        commandListener.start(true);
+    }
 
-    private class listenForPlayers implements Runnable {
+    private class ListenForPlayers implements Runnable {
         @Override
         public void run() {
+            SocketHints hints = new SocketHints();
             while (true) {
-                //TODO: create new socket to listen to commands on
+                Debug.println("Server", "Waiting for connection");
+                Socket playerSocket = serverSocket.accept(hints);
+                sockets.add(playerSocket);
+                ListenForCommand newCommandListener = new ListenForCommand(playerSocket);
+                newCommandListener.start(false);
             }
+
+        }
+
+        public void start() {
+            Thread listeningThread = new Thread(this, "ListeningThread");
+            listeningThread.start();
         }
     }
 
-    private class listenForCommands implements Runnable {
+    private class ListenForCommand implements Runnable {
+        private Socket socket;
+
+        public ListenForCommand(Socket socket) {
+            this.socket = socket;
+        }
+
         @Override
         public void run() {
-            //TODO: parse command and add it to the queue
+            BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            while (true) {
+                String message = "";
+                Debug.println("Command", "Listening for message");
+                try {
+                    message = reader.readLine();
+                    Command newCommand = parseMessage(message, socket);
+                    commandQueue.add(newCommand);
+                } catch (IOException e) {
+                    //TODO: send error response
+                    e.printStackTrace();
+                }
+
+            }
+        }
+
+
+        public void start(boolean b) {
+            Thread commandListener = new Thread(this, "CommandThread" + Math.random());
+            commandListener.start();
+            if (b) {
+                List<String> arguments = new LinkedList<>();
+                arguments.add(EngineManager.getCurrentPlayer().getDisplayName());
+                arguments.add(EngineManager.getCurrentPlayer().getUserId());
+                arguments.add(EngineManager.getCurrentPlayer().promptPassword());
+                Command connectMessage = new Command(Command.CommandType.CONNECT, arguments, socket);
+                NetworkManager.sendMessage(socket, connectMessage);
+            }
         }
     }
 

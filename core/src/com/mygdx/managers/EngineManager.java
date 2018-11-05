@@ -188,10 +188,8 @@ public class EngineManager {
      */
     public static void createNewCampaign() {
         clean();
-        NetworkManager.getInstance().startServer(0);
+        NetworkManager.getInstance().startServer(199);
         ListManager.nukeLists();
-
-
     }
 
     /**
@@ -259,7 +257,7 @@ public class EngineManager {
     }
 
     private void initPlayer() {
-        EngineManager.currentPlayer = new Player("Meee", "1234");
+        EngineManager.currentPlayer = new Player("Mee", "1234");
 
     }
 

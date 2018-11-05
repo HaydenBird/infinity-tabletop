@@ -7,6 +7,8 @@ import com.badlogic.gdx.net.ServerSocketHints;
 import com.badlogic.gdx.net.Socket;
 import com.badlogic.gdx.net.SocketHints;
 import com.mygdx.containers.Command;
+import com.mygdx.game.TableTopMap;
+import com.mygdx.game.TableTopToken;
 import sun.security.ssl.Debug;
 
 import java.io.*;
@@ -93,10 +95,11 @@ public class NetworkManager {
         return instance;
     }
 
-    private static void newFile(Command currentCommand) {
+    private static void newFile(Command currentCommand, String filePath, int filesize) {
         //Check to see if we have a file with that name
-        File file = new File(currentCommand.get(0));
+        File file = new File(filePath);
         if (file.exists()) {
+
             //If yes then
             //Check to see if the hash is the same
             //If Yes, send response saying so and return
@@ -104,11 +107,12 @@ public class NetworkManager {
         }
         //If no then continue
         //Receive the file
+        return;/*
         try {
-            receiveFile(file, currentCommand.getSocket(), Integer.parseInt(currentCommand.get(1)));
+            receiveFile(file, currentCommand.getSocket(), filesize);
         } catch (IOException e) {
             //Sends response
-        }
+        }*/
 
     }
 
@@ -156,8 +160,10 @@ public class NetworkManager {
             case CHECK_IN:
                 break;
             case TOKEN:
+                newToken(currentCommand);
                 break;
             case MOVE:
+                moveToken(currentCommand);
                 break;
             case CHANGE_IMAGE:
                 break;
@@ -178,9 +184,58 @@ public class NetworkManager {
             case CHAT:
                 break;
             case NEW_FILE:
-                newFile(currentCommand);
+                break;
+            case NEW_ASSET:
+                break;
+            case ADD_OWNER:
+                break;
+            case REMOVE_OWNER:
+                break;
+            case REMOVE_TOKEN:
+                break;
+            case REMOVE_MAP:
+                break;
+            case REMOVE_ENTRY:
+                break;
+            case ERROR:
                 break;
         }
+    }
+
+    //  token [parent map id] [token id] [token X] [token Y] [layer] [image asset name] [file size] [message id]
+    // token test test 4 4 2 assets/badlogic.jpg 100 test
+    private static void newToken(Command currentCommand) {
+        Debug.println("Got message", currentCommand.toString());
+        TableTopMap parentMap = MapManager.getCurrentMap();//TableTopMap.getMapMap().get(currentCommand.get(0));
+        TableTopToken newToken = TableTopToken.getTokenMap().get(currentCommand.get(1));
+        //Check if map or token exists
+        if (parentMap == null || newToken != null) {
+            Debug.println("Cant create token", "");
+            //TODO: Send error message
+            return;
+        }
+        String tokenId = currentCommand.get(1);
+        float x = Float.parseFloat(currentCommand.get(2));
+        float y = Float.parseFloat(currentCommand.get(3));
+        int layer = Integer.parseInt(currentCommand.get(4));
+        String filePath = currentCommand.get(5);
+        Debug.println("Got Filepath", filePath);
+        newFile(currentCommand, filePath, Integer.parseInt(currentCommand.get(6)));
+        newToken = new TableTopToken(x, y, filePath, parentMap, layer, EngineManager.getCurrentPlayer(), tokenId);
+    }
+
+    private static void moveToken(Command command) {
+        TableTopToken token = TableTopToken.getTokenMap().get(command.get(0));
+        float x = Float.parseFloat(command.get(1));
+        float y = Float.parseFloat(command.get(2));
+        int layer = Integer.parseInt(command.get(3));
+        float width = Float.parseFloat(command.get(4));
+        float height = Float.parseFloat(command.get(5));
+        float rotation = Float.parseFloat(command.get(6));
+        token.setPosition(x, y);
+        token.setSize(width, height);
+        token.setLayer(layer);
+        //TODO: handle rotation
     }
 
     private static void sendMessage(Socket socket, Command command) {

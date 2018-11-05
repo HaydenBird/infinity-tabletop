@@ -6,13 +6,55 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.mygdx.managers.MapManager;
 import com.mygdx.managers.UIManager;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * This object represents a map screen. It acts as a list of all the tokens and images on the map, and calls for them to be rendered
  */
 public class TableTopMap implements Screen {
+
+    private static Map<String, TableTopMap> mapMap;
+    private String id;
+
+    /**
+     * Constructor method
+     *
+     * @param name    The name of the map
+     * @param game    the parent game
+     * @param showTab whether to add the tab to the map tabs list
+     */
+    public TableTopMap(String name, final MyGdxGame game, boolean showTab) {
+        this.game = game;
+        this.name = name;
+        this.world = new World(new Vector2(0, 0), true);
+        this.isSaved = true;
+        tokenLayerTokens = new LinkedList<>();
+        mapLayerTokens = new LinkedList<>();
+        blockingLayerTokens = new LinkedList<>();
+        if (showTab) UIManager.addMap(this);
+        this.id = UUID.randomUUID().toString();
+        addToMap(this);
+    }
+
+    /**
+     * Constructor method
+     *
+     * @param name    The name of the map
+     * @param game    the parent game
+     * @param showTab whether to add the tab to the map tabs list
+     */
+    public TableTopMap(String name, final MyGdxGame game, boolean showTab, String id) {
+        this.game = game;
+        this.name = name;
+        this.world = new World(new Vector2(0, 0), true);
+        this.isSaved = true;
+        tokenLayerTokens = new LinkedList<>();
+        mapLayerTokens = new LinkedList<>();
+        blockingLayerTokens = new LinkedList<>();
+        if (showTab) UIManager.addMap(this);
+        this.id = id;
+        addToMap(this);
+    }
 
     /**
      * This method adds a new token to the map
@@ -43,25 +85,23 @@ public class TableTopMap implements Screen {
     private List<TableTopToken> blockingLayerTokens;
     private List<TableTopToken> mapLayerTokens;
 
+    public static Map<String, TableTopMap> getMapMap() {
+        return mapMap;
+    }
+
     private World world;
 
-    /**
-     * Constructor method
-     *
-     * @param name    The name of the map
-     * @param game    the parent game
-     * @param showTab whether to add the tab to the map tabs list
-     */
-    public TableTopMap(String name, final MyGdxGame game, boolean showTab) {
-        this.game = game;
-        this.name = name;
-        this.world = new World(new Vector2(0, 0), true);
-        this.isSaved = true;
-        tokenLayerTokens = new LinkedList<>();
-        mapLayerTokens = new LinkedList<>();
-        blockingLayerTokens = new LinkedList<>();
-        if (showTab) UIManager.addMap(this);
+    public static void addToMap(TableTopMap map) {
+        if (mapMap == null) {
+            mapMap = new HashMap<>();
+        }
+        mapMap.put(map.getId(), map);
     }
+
+    private String getId() {
+        return id;
+    }
+
 
     /**
      * The name of the map

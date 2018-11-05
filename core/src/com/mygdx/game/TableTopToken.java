@@ -359,6 +359,13 @@ public class TableTopToken extends Image {
         super.setWidth(width);
     }
 
+    public void setSize(float width, float height) {
+        this.setWidth(width);
+        this.setHeight(height);
+        super.setWidth(width);
+        super.setHeight(height);
+    }
+
     public String getTokenID() {
         return tokenID;
     }

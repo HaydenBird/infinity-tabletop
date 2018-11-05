@@ -8,6 +8,7 @@ import com.mygdx.containers.Command;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -40,7 +41,13 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * changeimage [token id] [new asset name] [id of the message transfer] [message id]
  *
  * Token light changed:
- * lightChange [token id] [light type] [light color] [light distance]
+ * lightchange [token id] [light type] [light color] [light distance]
+ *
+ * Token owner added
+ * addowner [token id] [new player id] [message id]
+ *
+ * Token owner removed:
+ * removeowner [token id] [player id to remove] [message id]
  *
  * Associate token with entry
  * associate [token id] [entry id] [message id]
@@ -193,6 +200,17 @@ public class NetworkManager {
         }
     }
 
+    private Command parseMessage(String message, Socket originSocket) {
+        String[] messagecomponents = message.split(" ");
+        LinkedList<String> messageList = new LinkedList<>();
+        for (String component : messagecomponents) {
+            messageList.add(component);
+        }
+        Command.CommandType type = Command.getType(messageList.removeFirst());
+        Command newCommand = new Command(type, messageList, originSocket);
+        return newCommand;
+    }
+
 
     private class listenForPlayers implements Runnable {
         @Override
@@ -202,7 +220,6 @@ public class NetworkManager {
             }
         }
     }
-
 
     private class listenForCommands implements Runnable {
         @Override

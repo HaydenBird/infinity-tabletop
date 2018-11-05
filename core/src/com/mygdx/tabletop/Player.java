@@ -41,14 +41,14 @@ public class Player {
     }
 
     public String getDisplayName() {
-        return "";
+        return "Me";
     }
 
     public String getUserId() {
-        return "";
+        return "user1";
     }
 
     public String promptPassword() {
-        return "";
+        return "xysssx";
     }
 }

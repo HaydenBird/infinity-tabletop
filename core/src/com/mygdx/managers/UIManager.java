@@ -2,7 +2,6 @@ package com.mygdx.managers;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Pixmap;
@@ -10,8 +9,6 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
@@ -20,22 +17,12 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
-import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.kotcrab.vis.ui.util.dialog.Dialogs;
-import com.kotcrab.vis.ui.util.dialog.InputDialogAdapter;
 import com.kotcrab.vis.ui.widget.*;
-import com.kotcrab.vis.ui.widget.color.ColorPicker;
-import com.kotcrab.vis.ui.widget.color.ColorPickerAdapter;
 import com.kotcrab.vis.ui.widget.file.FileChooser;
-import com.kotcrab.vis.ui.widget.file.FileChooserAdapter;
 import com.kotcrab.vis.ui.widget.file.FileTypeFilter;
-import com.kotcrab.vis.ui.widget.tabbedpane.Tab;
 import com.kotcrab.vis.ui.widget.tabbedpane.TabbedPane;
-import com.kotcrab.vis.ui.widget.tabbedpane.TabbedPaneAdapter;
-import com.mygdx.game.MyGdxGame;
-import com.mygdx.game.TableTopMap;
-import com.mygdx.game.TableTopToken;
+import com.mygdx.game.*;
 import com.mygdx.tabletop.Entry;
 import com.mygdx.tabletop.Npc;
 import com.mygdx.tabletop.PlayerCharacter;
@@ -116,14 +103,7 @@ public class UIManager {
     private static void buildMapWindow() {
         mapContainer = new Table();
         mapPanes = new TabbedPane();
-        mapPanes.addListener(new TabbedPaneAdapter() {
-            @Override
-            public void switchedTab(Tab tab) {
-                super.switchedTab(tab);
-                MapTab newCurrent = (MapTab) tab;
-                MapManager.setCurrentMap(newCurrent.getMap());
-            }
-        });
+        mapPanes.addListener(new MapPaneAdapter());
         mapPaneWindow = mapPanes.getTable();
         mapContainer.add(mapPaneWindow).growX();
         mapContainer.row();
@@ -254,29 +234,9 @@ public class UIManager {
         MenuItem blockingLayer = new MenuItem("Blocking");
         MenuItem tokenLayer = new MenuItem("Token");
 
-        mapLayer.addListener(new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                MapManager.setLayer(TableTopMap.Layer.MAP);
-                MapManager.clearSelectedTokens();
-            }
-        });
-
-        blockingLayer.addListener(new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                MapManager.setLayer(TableTopMap.Layer.BLOCKING);
-                MapManager.clearSelectedTokens();
-            }
-        });
-
-        tokenLayer.addListener(new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                MapManager.setLayer(TableTopMap.Layer.TOKEN);
-                MapManager.clearSelectedTokens();
-            }
-        });
+        mapLayer.addListener(new ChangeCurrentLayerListener(TableTopMap.Layer.MAP));
+        blockingLayer.addListener(new ChangeCurrentLayerListener(TableTopMap.Layer.BLOCKING));
+        tokenLayer.addListener(new ChangeCurrentLayerListener(TableTopMap.Layer.TOKEN));
         tokenLayer.setChecked(true);
         layerSubmenu.addItem(mapLayer);
         layerSubmenu.addItem(blockingLayer);
@@ -292,35 +252,11 @@ public class UIManager {
         MenuItem blockingLayer = new MenuItem("Blocking");
         MenuItem tokenLayer = new MenuItem("Token");
 
-        mapLayer.addListener(new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                for (TableTopToken token : MapManager.getSelectedTokens()) {
-                    token.setLayer(TableTopMap.Layer.MAP);
-                }
-                MapManager.setLayer(TableTopMap.Layer.MAP);
-            }
-        });
+        mapLayer.addListener(new SetLayerListener(TableTopMap.Layer.MAP));
 
-        blockingLayer.addListener(new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                for (TableTopToken token : MapManager.getSelectedTokens()) {
-                    token.setLayer(TableTopMap.Layer.BLOCKING);
-                }
-                MapManager.setLayer(TableTopMap.Layer.BLOCKING);
-            }
-        });
+        blockingLayer.addListener(new SetLayerListener(TableTopMap.Layer.BLOCKING));
 
-        tokenLayer.addListener(new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                for (TableTopToken token : MapManager.getSelectedTokens()) {
-                    token.setLayer(TableTopMap.Layer.TOKEN);
-                }
-                MapManager.setLayer(TableTopMap.Layer.TOKEN);
-            }
-        });
+        tokenLayer.addListener(new SetLayerListener(TableTopMap.Layer.TOKEN));
         tokenLayer.setChecked(true);
         layerSubmenu.addItem(mapLayer);
         layerSubmenu.addItem(blockingLayer);
@@ -336,26 +272,7 @@ public class UIManager {
     private static void createEnableLightButton(Menu tokenMenu) {
         MenuItem addLight = new MenuItem("Lighting");
         PopupMenu lightSubMenu = new PopupMenu();
-        MenuItem omniLightButton = new MenuItem("Omnidirectional Light", new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                ColorPicker picker = new ColorPicker(new ColorPickerAdapter() {
-                    @Override
-                    public void finished(Color newColor) {
-                        Dialogs.showInputDialog(getStage(), "Light distance", "Distance: ", new InputDialogAdapter() {
-                            @Override
-                            public void finished(String input) {
-                                for (TableTopToken token : MapManager.getSelectedTokens()) {
-                                    token.enableOmniLight(newColor, Integer.parseInt(input) * 110);
-                                }
-
-                            }
-                        });
-                    }
-                });
-                getStage().addActor(picker);
-            }
-        });
+        MenuItem omniLightButton = new MenuItem("Omnidirectional Light", new AddOmniLightListener());
         lightSubMenu.addItem(omniLightButton);
         addLight.setSubMenu(lightSubMenu);
         tokenMenu.addItem(addLight);
@@ -363,32 +280,16 @@ public class UIManager {
 
     /**
      * This method creates the submenu to create a token
-     * @param tokenMenu the menu toadd the submenu to
+     * @param tokenMenu the menu to add the submenu to
      */
     private static void createAddTokenButton(Menu tokenMenu) {
         MenuItem newToken = new MenuItem("New");
         PopupMenu newSubmenu = new PopupMenu();
-        MenuItem addToMap = new MenuItem("Map", new ChangeListener() {
+        MenuItem addToMap = new MenuItem("Map", new CreateTokenListener(TableTopMap.Layer.MAP));
 
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                UIManager.createToken(TableTopMap.Layer.MAP);
-            }
-        });
+        MenuItem addToBlocking = new MenuItem("Blocking", new CreateTokenListener(TableTopMap.Layer.BLOCKING));
 
-        MenuItem addToBlocking = new MenuItem("Blocking", new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                UIManager.createToken(TableTopMap.Layer.BLOCKING);
-            }
-        });
-
-        MenuItem addToToken = new MenuItem("Token", new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                UIManager.createToken(TableTopMap.Layer.TOKEN);
-            }
-        });
+        MenuItem addToToken = new MenuItem("Token", new CreateTokenListener(TableTopMap.Layer.TOKEN));
         newSubmenu.addItem(addToMap);
         newSubmenu.addItem(addToBlocking);
         newSubmenu.addItem(addToToken);
@@ -402,7 +303,7 @@ public class UIManager {
      * This method takes a layer and prompts the user for an image file, it then creates a token centred on the screen
      * @param layer the layer to add the token to
      */
-    private static void createToken(int layer) {
+    public static void createToken(int layer) {
         FileChooser.setDefaultPrefsName("com.mygdx");
         FileChooser fileChooser = new FileChooser(FileChooser.Mode.OPEN);
         fileChooser.setDirectory(Gdx.files.getLocalStoragePath());
@@ -410,14 +311,7 @@ public class UIManager {
         typeFilter.addRule("Image files (*.png, *.jpg, *.gif)", "png", "jpg", "gif");
         fileChooser.setFileTypeFilter(typeFilter);
         fileChooser.setSelectionMode(FileChooser.SelectionMode.FILES);
-        fileChooser.setListener(new FileChooserAdapter() {
-            @Override
-            public void selected(Array<FileHandle> file) {
-                TableTopToken newToken = new TableTopToken(MapManager.getMapStage().getCamera().position.x, MapManager.getMapStage().getCamera().position.y,
-                        file.get(0).path(), MapManager.getCurrentMap(), layer, EngineManager.getCurrentPlayer());
-                MapManager.getCurrentMap().addToken(newToken, layer);
-            }
-        });
+        fileChooser.setListener(new SelectImageAdapter(layer));
         getStage().addActor(fileChooser.fadeIn());
     }
 
@@ -426,29 +320,10 @@ public class UIManager {
      */
     private static void buildMapMenu() {
         mapMenu = new Menu("Map");
-        MenuItem addMenu = new MenuItem("New Map", new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                new TableTopMap("New Map", UIManager.getGame(), true);
-            }
-
-        });
+        MenuItem addMenu = new MenuItem("New Map", new NewMapListener());
         mapMenu.addItem(addMenu);
 
-        MenuItem renameMenu = new MenuItem("Rename", new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                MapTab tab = (MapTab) mapPanes.getActiveTab();
-                Dialogs.showInputDialog(getStage(), "Rename Map", "Name: ", new InputDialogAdapter() {
-                    @Override
-                    public void finished(String input) {
-                        tab.rename(input);
-                        tab.dirty();
-                    }
-                });
-            }
-
-        });
+        MenuItem renameMenu = new MenuItem("Rename", new RenameListener());
         mapMenu.addItem(renameMenu);
         MenuItem layerSelect = new MenuItem("Layer");
         createSelectLayerButton(layerSelect);
@@ -492,24 +367,7 @@ public class UIManager {
         chatContainer.add(chatLogContainer).fill().expand();
         colorBackground(chatContainer, Color.DARK_GRAY);
         TextField chatEntry = new TextField("", EngineManager.getSkin());
-        chatEntry.addListener(new InputListener() {
-            @Override
-            public boolean keyDown(InputEvent e, int keyCode) {
-                if (keyCode == Input.Keys.ENTER && !chatEntry.getText().trim().isEmpty()) {
-                    boolean isBottom = false;
-                    if (chatLogContainer.isBottomEdge()) {
-                        isBottom = true;
-                    }
-                    chatLog.add(EngineManager.getRollManager().parseMessage(chatEntry.getText())).fill().expand().row();
-                    chatEntry.setText(null);
-                    if (isBottom) {
-                        chatLogContainer.layout();
-                        chatLogContainer.scrollTo(0, 0, 0, 0);
-                    }
-                }
-                return false;
-            }
-        });
+        chatEntry.addListener(new ChatBoxListener(chatEntry, chatLog, chatLogContainer));
         chatContainer.row();
         chatContainer.add(chatEntry).fillX().expandX();
         container.add(chatContainer).fill().expand().colspan(2);
@@ -570,5 +428,10 @@ public class UIManager {
      */
     public static void addMap(TableTopMap tableTopMap) {
         mapPanes.add(new MapTab(tableTopMap.getName(), tableTopMap));
+    }
+
+
+    public static TabbedPane getMapPanes() {
+        return mapPanes;
     }
 }

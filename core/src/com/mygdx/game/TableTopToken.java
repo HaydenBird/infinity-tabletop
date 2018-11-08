@@ -126,50 +126,8 @@ public class TableTopToken extends Image {
      */
     private void addClickListeners() {
         TableTopToken thisToken = this;
-        this.addListener(new DragListener() {
-            public void drag(InputEvent event, float x, float y, int pointer) {
-                Debug.println("Dragging", "X: " + x + ", Y: " + y);
-                if (!MapManager.getSelectedTokens().contains(thisToken)) {
-                    if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) {
-                        MapManager.setSelectedToken(thisToken);
-                    } else {
-                        MapManager.clearSelectedTokens();
-                        MapManager.setSelectedToken(thisToken);
-                    }
-
-
-                }
-                for (TableTopToken a : MapManager.getSelectedTokens()) {
-                    a.position.x += x;
-                    a.position.y += y;
-                    a.setPosition(a.position.x - a.getWidth() / 2, a.position.y - a.getHeight() / 2);
-                    MapManager.getMapStage().getCamera().update();
-                }
-
-            }
-
-            public void dragStop(InputEvent event, float x, float y, int pointer) {
-
-                for (TableTopToken a : MapManager.getSelectedTokens()) {
-                    a.snapToGrid(a.position.x, a.position.y);
-                }
-            }
-        });
-        this.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) {
-                    if (MapManager.getSelectedTokens().contains(thisToken)) {
-                        MapManager.getSelectedTokens().remove(thisToken);
-                    } else {
-                        MapManager.setSelectedToken(thisToken);
-                    }
-                } else {
-                    MapManager.clearSelectedTokens();
-                    MapManager.setSelectedToken(thisToken);
-                }
-            }
-        });
+        this.addListener(new TokenDragListener(this));
+        this.addListener(new TokenClickListener(this));
     }
 
     private Body body;
@@ -369,5 +327,74 @@ public class TableTopToken extends Image {
     public String getTokenID() {
         return tokenID;
     }
+
+
+    /**
+     * This class is the listener for the token being dragged
+     */
+    private class TokenDragListener extends DragListener {
+        private TableTopToken thisToken;
+
+        public TokenDragListener(TableTopToken thisToken) {
+            this.thisToken = thisToken;
+        }
+
+        public void drag(InputEvent event, float x, float y, int pointer) {
+            Debug.println("Dragging", "X: " + x + ", Y: " + y);
+            if (!MapManager.getSelectedTokens().contains(thisToken)) {
+                if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) {
+                    MapManager.setSelectedToken(thisToken);
+                } else {
+                    MapManager.clearSelectedTokens();
+                    MapManager.setSelectedToken(thisToken);
+                }
+
+
+            }
+            for (TableTopToken a : MapManager.getSelectedTokens()) {
+                a.position.x += x;
+                a.position.y += y;
+                a.setPosition(a.position.x - a.getWidth() / 2, a.position.y - a.getHeight() / 2);
+                MapManager.getMapStage().getCamera().update();
+            }
+
+        }
+
+        public void dragStop(InputEvent event, float x, float y, int pointer) {
+
+            for (TableTopToken a : MapManager.getSelectedTokens()) {
+                a.snapToGrid(a.position.x, a.position.y);
+            }
+        }
+    }
+
+    /**
+     * This class is the listener that handles the token being clicked
+     */
+    private class TokenClickListener extends ClickListener {
+
+        private TableTopToken thisToken;
+
+        public TokenClickListener(TableTopToken thisToken) {
+            this.thisToken = thisToken;
+        }
+
+
+        @Override
+        public void clicked(InputEvent event, float x, float y) {
+            if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) {
+                if (MapManager.getSelectedTokens().contains(thisToken)) {
+                    MapManager.getSelectedTokens().remove(thisToken);
+                } else {
+                    MapManager.setSelectedToken(thisToken);
+                }
+            } else {
+                MapManager.clearSelectedTokens();
+                MapManager.setSelectedToken(thisToken);
+            }
+        }
+    }
+
+
 }
 

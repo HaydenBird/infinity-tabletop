@@ -1,6 +1,7 @@
 package com.mygdx.containers;
 
 import com.badlogic.gdx.net.Socket;
+import sun.security.ssl.Debug;
 
 import java.util.List;
 
@@ -156,6 +157,7 @@ public class Command {
         String commandString;
         commandString = commandTypeToString(type);
         for (String s : arguments) {
+            Debug.println("Part", s);
             commandString += " ";
             commandString += s;
         }

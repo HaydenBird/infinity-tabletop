@@ -8,13 +8,11 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
-import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -200,12 +198,7 @@ public class UIManager {
         fileMenu.addItem(new MenuItem("Save"));
         fileMenu.addItem(new MenuItem("Save As"));
         fileMenu.addSeparator();
-        MenuItem exit = new MenuItem("Exit", new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                System.exit(0);
-            }
-        });
+        MenuItem exit = new MenuItem("Exit", new ExitListener());
         exit.setShortcut(Input.Keys.ALT_LEFT, Input.Keys.F4);
         fileMenu.addItem(exit);
         menuBar.addMenu(fileMenu);

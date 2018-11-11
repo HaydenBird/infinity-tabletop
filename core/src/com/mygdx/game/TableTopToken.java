@@ -96,13 +96,15 @@ public class TableTopToken extends Image {
         valuesMax = new float[NUMBER_OF_VALUES];
         this.parentMap = parentMap;
         owners = new LinkedList<>();
-        owners.add(creator);
+        owners.add(EngineManager.getGM());
         parentMap.addToken(this, TableTopMap.Layer.TOKEN);
         parentMap.setSaved(false);
         this.texturePath = imagePath;
         position = new Vector3(xPos, yPos * EngineManager.getRatio(), 0);
-        if (owners.contains(EngineManager.getCurrentPlayer())) enableOmniLight(new Color(100f, 100f, 100f, 0.2f), 70);
         coneLight = null;
+        if (owners.contains(EngineManager.getCurrentPlayer())) {
+            selfLight = new PointLight(EngineManager.getRayHandler(parentMap.getWorld()), 128, Color.WHITE, 50, this.getX(), this.getY());
+        }
         this.setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
         setWidth(DEFAULT_WIDTH);
         setHeight(DEFAULT_HEIGHT);
@@ -280,7 +282,11 @@ public class TableTopToken extends Image {
 
     public void setLayer(int layer) {
         this.layer = layer;
+        if (this.owners == null) Debug.println("SetLayer", "Owners is null");
+        if (EngineManager.getCurrentPlayer() == null) Debug.println("SetLayer", "Player is null");
         if (layer == TableTopMap.Layer.TOKEN && this.owners.contains(EngineManager.getCurrentPlayer())) {
+            if (selfLight == null)
+                selfLight = new PointLight(EngineManager.getRayHandler(parentMap.getWorld()), 128, Color.WHITE, 50, this.getX(), this.getY());
             selfLight.setActive(true);
         } else {
             selfLight.setActive(false);

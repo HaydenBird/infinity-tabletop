@@ -152,6 +152,7 @@ public class NetworkManager {
     public static void handleNextCommand() {
         Command currentCommand = getNextCommand();
         if (currentCommand == null) return;
+        Debug.println("Handle Command", currentCommand.toString());
         switch (currentCommand.getType()) {
             case RESPONSE:
                 break;

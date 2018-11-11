@@ -256,6 +256,10 @@ public class EngineManager {
         return atlas;
     }
 
+    public static Player getGM() {
+        return currentPlayer;
+    }
+
     private void initPlayer() {
         EngineManager.currentPlayer = new Player("Mee", "1234");
 

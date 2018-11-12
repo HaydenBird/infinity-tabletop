@@ -51,4 +51,12 @@ public class Player {
     public String promptPassword() {
         return passwordHash;
     }
+
+    public void setId(String s) {
+        this.playerID = s;
+    }
+
+    public void setDisplayName(String s) {
+        this.displayName = s;
+    }
 }

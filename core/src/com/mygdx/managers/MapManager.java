@@ -7,6 +7,7 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.mygdx.game.TableTopMap;
 import com.mygdx.game.TableTopRenderer;
 import com.mygdx.game.TableTopToken;
+import com.mygdx.tabletop.Player;
 import sun.security.ssl.Debug;
 
 import java.util.LinkedList;
@@ -154,5 +155,10 @@ public class MapManager {
         currentMap = null;
         layer = TableTopMap.Layer.TOKEN;
         clearSelectedTokens();
+    }
+
+    public static TableTopMap getPlayerCurrentMap(Player curPlayer) {
+        //TODO: individual current maps
+        return currentMap;
     }
 }

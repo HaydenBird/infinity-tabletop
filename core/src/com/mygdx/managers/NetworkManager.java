@@ -13,10 +13,7 @@ import com.mygdx.tabletop.Player;
 import sun.security.ssl.Debug;
 
 import java.io.*;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -83,13 +80,15 @@ public class NetworkManager {
     private static ConcurrentHashMap<Socket, PrintWriter> writers;
     private static Queue<Command> commandQueue; //This is the only place in which the networking threads will communicate with the main thread
     private static NetworkManager instance;
+    private static boolean amHost;
     private ServerSocketHints serverHints;
     private Socket clientSocket;
 
     public NetworkManager() {
         sockets = new ConcurrentHashMap<>();
         writers = new ConcurrentHashMap<>();
-
+        commandQueue = new ConcurrentLinkedQueue<>();
+        amHost = false;
     }
 
     public static NetworkManager getInstance() {
@@ -97,6 +96,14 @@ public class NetworkManager {
             instance = new NetworkManager();
         }
         return instance;
+    }
+
+    public static void sendCommand(Command command) {
+        if (writers.get(command.getSocket()) == null) {
+            writers.put(command.getSocket(), new PrintWriter(command.getSocket().getOutputStream()));
+        }
+        writers.get(command.getSocket()).println(command.toString());
+        writers.get(command.getSocket()).flush();
     }
 
     public static void sendCommand(Command command, List<Player> recipients) {
@@ -175,6 +182,7 @@ public class NetworkManager {
             case RESPONSE:
                 break;
             case CONNECT:
+                handleNewConnect(currentCommand);
                 break;
             case CHECK_IN:
                 break;
@@ -221,6 +229,53 @@ public class NetworkManager {
         }
     }
 
+    private static void handleNewConnect(Command command) {
+        //connect [display name] [id] [password hash] [message id]
+        //Get the player assigned to the socket
+        Socket playerSocket = command.getSocket();
+        Player curPlayer = null;
+        for (Map.Entry<Player, Socket> e : sockets.entrySet()) {
+            if (e.getValue().equals(playerSocket)) curPlayer = e.getKey();
+        }
+        if (curPlayer == null) return;
+        String displayName = command.get(0);
+        String id = command.get(1);
+        String passwordHash = command.get(2);
+        if (checkPassword(id, passwordHash)) {
+            curPlayer.setDisplayName(displayName);
+            curPlayer.setId(id);
+        }
+        //Create a new game state for that player
+        buildMap(curPlayer, MapManager.getPlayerCurrentMap(curPlayer));
+        //Update their chat log
+        sendChatLog(curPlayer);
+        //Make sure to create all the entries they have access to
+        sendEntries(curPlayer);
+
+    }
+
+    private static void sendEntries(Player curPlayer) {
+        //TODO: Send the entries
+    }
+
+    private static void sendChatLog(Player curPlayer) {
+        //TODO: Send the last 100 chat entries
+    }
+
+    private static void buildMap(Player curPlayer, TableTopMap map) {
+        //TODO: map sending
+        //Give the clean
+        //Create and put them on the current map
+        //Create all the tokens for them that are on the current map
+        //Send needed files
+        //Create tokens
+        //Enable lights
+    }
+
+    private static boolean checkPassword(String id, String passwordHash) {
+        return true; //TODO: passwords
+    }
+
     //  token [parent map id] [token id] [token X] [token Y] [layer] [image asset name] [file size] [message id]
     // token test test 4 4 2 assets/badlogic.jpg 100 test
     private static void newToken(Command currentCommand) {
@@ -265,8 +320,13 @@ public class NetworkManager {
         return Collections.list(sockets.keys());
     }
 
+    public static boolean isHost() {
+        return amHost;
+    }
+
     public void startServer(int port) {
-        commandQueue = new ConcurrentLinkedQueue<>();
+        amHost = true;
+
         serverHints = new ServerSocketHints();
         serverHints.acceptTimeout = 0;
         serverSocket = Gdx.net.newServerSocket(Protocol.TCP, port, serverHints);
@@ -374,7 +434,7 @@ public class NetworkManager {
                 arguments.add(EngineManager.getCurrentPlayer().getUserId());
                 arguments.add(EngineManager.getCurrentPlayer().promptPassword());
                 Command connectMessage = new Command(Command.CommandType.CONNECT, arguments, socket);
-                NetworkManager.sendMessage(socket, connectMessage);
+                sendCommand(connectMessage);
             }
         }
     }

@@ -79,6 +79,7 @@ public class TableTopToken extends Image {
         addClickListeners();
         tokenID = UUID.randomUUID().toString();
         TableTopToken.addToMap(this);
+        if (NetworkManager.isHost()) sendCreationMessage();
     }
 
     /**
@@ -115,7 +116,22 @@ public class TableTopToken extends Image {
         addClickListeners();
         this.tokenID = tokenID;
         TableTopToken.addToMap(this);
+        if (NetworkManager.isHost()) sendCreationMessage();
+    }
 
+    private void sendCreationMessage() {
+        //  token [parent map id] [token id] [token X] [token Y] [layer] [image asset name] [file size] [message id]
+        List<String> args = new LinkedList<>();
+        args.add(parentMap.getName() + " ");
+        args.add(tokenID + " ");
+        args.add(tokenID + " ");
+        args.add(position.x + " ");
+        args.add(position.y + " ");
+        args.add(texturePath + " ");
+        args.add("0");
+        args.add("MessageID");
+        Command command = new Command(Command.CommandType.TOKEN, args, null);
+        NetworkManager.sendCommand(command, NetworkManager.getPlayers());
     }
 
     public static void addToMap(TableTopToken token) {
@@ -264,15 +280,15 @@ public class TableTopToken extends Image {
 
     private void sendMovementMessage() {
         List<String> arguments = new LinkedList<>();
-        arguments.add(parentMap.toString() + " ");
         arguments.add(tokenID + " ");
         arguments.add(this.position.x + " ");
         arguments.add(this.position.y + " ");
         arguments.add(this.layer + " ");
-        arguments.add(texturePath + " ");
-        arguments.add("2 ");
+        arguments.add(this.width + " ");
+        arguments.add(this.height + " ");
+        arguments.add(this.getRotation() + " ");
         arguments.add("MessageID");
-        Command command = new Command(Command.CommandType.TOKEN, arguments, null);
+        Command command = new Command(Command.CommandType.MOVE, arguments, null);
         NetworkManager.sendCommand(command, NetworkManager.getPlayers());
 
     }

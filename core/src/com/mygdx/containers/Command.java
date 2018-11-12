@@ -154,8 +154,7 @@ public class Command {
 
     @Override
     public String toString() {
-        String commandString;
-        commandString = commandTypeToString(type);
+        String commandString = commandTypeToString(type);
         for (String s : arguments) {
             Debug.println("Part", s);
             commandString += " ";

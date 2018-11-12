@@ -13,8 +13,10 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.DragListener;
+import com.mygdx.containers.Command;
 import com.mygdx.managers.EngineManager;
 import com.mygdx.managers.MapManager;
+import com.mygdx.managers.NetworkManager;
 import com.mygdx.tabletop.Entry;
 import com.mygdx.tabletop.Player;
 import sun.security.ssl.Debug;
@@ -257,6 +259,22 @@ public class TableTopToken extends Image {
         super.setPosition(x, y);
         this.position.set(x, y, 0);
         updateLightPositions();
+        sendMovementMessage();
+    }
+
+    private void sendMovementMessage() {
+        List<String> arguments = new LinkedList<>();
+        arguments.add(parentMap.toString() + " ");
+        arguments.add(tokenID + " ");
+        arguments.add(this.position.x + " ");
+        arguments.add(this.position.y + " ");
+        arguments.add(this.layer + " ");
+        arguments.add(texturePath + " ");
+        arguments.add("2 ");
+        arguments.add("MessageID");
+        Command command = new Command(Command.CommandType.TOKEN, arguments, null);
+        NetworkManager.sendCommand(command, NetworkManager.getPlayers());
+
     }
 
 

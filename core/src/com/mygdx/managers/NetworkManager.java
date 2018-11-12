@@ -9,14 +9,16 @@ import com.badlogic.gdx.net.SocketHints;
 import com.mygdx.containers.Command;
 import com.mygdx.game.TableTopMap;
 import com.mygdx.game.TableTopToken;
+import com.mygdx.tabletop.Player;
 import sun.security.ssl.Debug;
 
 import java.io.*;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  *
@@ -77,14 +79,16 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class NetworkManager {
 
     private static ServerSocket serverSocket;
-    private static List<Socket> sockets;
+    private static ConcurrentHashMap<Player, Socket> sockets;
+    private static ConcurrentHashMap<Socket, PrintWriter> writers;
     private static Queue<Command> commandQueue; //This is the only place in which the networking threads will communicate with the main thread
     private static NetworkManager instance;
     private ServerSocketHints serverHints;
     private Socket clientSocket;
 
     public NetworkManager() {
-        sockets = new CopyOnWriteArrayList<>();
+        sockets = new ConcurrentHashMap<>();
+        writers = new ConcurrentHashMap<>();
 
     }
 
@@ -93,6 +97,20 @@ public class NetworkManager {
             instance = new NetworkManager();
         }
         return instance;
+    }
+
+    public static void sendCommand(Command command, List<Player> recipients) {
+        for (Player recipient : recipients) {
+            Debug.println("Sending message to", recipient.getDisplayName());
+            Socket playerSocket = sockets.get(recipient);
+
+            if (writers.get(playerSocket) == null) {
+                writers.put(playerSocket, new PrintWriter(playerSocket.getOutputStream()));
+            }
+
+            writers.get(playerSocket).println(command.toString());
+            writers.get(playerSocket).flush();
+        }
     }
 
     private static void newFile(Command currentCommand, String filePath, int filesize) {
@@ -243,6 +261,10 @@ public class NetworkManager {
 
     }
 
+    public static List<Player> getPlayers() {
+        return Collections.list(sockets.keys());
+    }
+
     public void startServer(int port) {
         commandQueue = new ConcurrentLinkedQueue<>();
         serverHints = new ServerSocketHints();
@@ -304,7 +326,7 @@ public class NetworkManager {
             while (true) {
                 Debug.println("Server", "Waiting for connection");
                 Socket playerSocket = serverSocket.accept(hints);
-                sockets.add(playerSocket);
+                sockets.put(new Player("New name", "1feop3j3"), playerSocket);
                 ListenForCommand newCommandListener = new ListenForCommand(playerSocket);
                 newCommandListener.start(false);
             }

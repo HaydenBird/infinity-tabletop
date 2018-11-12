@@ -157,7 +157,7 @@ public class Command {
         String commandString = commandTypeToString(type);
         for (String s : arguments) {
             Debug.println("Part", s);
-            commandString += " ";
+            commandString += "_";
             commandString += s;
         }
         return commandString;

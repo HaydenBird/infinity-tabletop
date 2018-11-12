@@ -99,6 +99,7 @@ public class NetworkManager {
     }
 
     public static void sendCommand(Command command) {
+        Debug.println("Sending message to host", command.toString());
         if (writers.get(command.getSocket()) == null) {
             writers.put(command.getSocket(), new PrintWriter(command.getSocket().getOutputStream()));
         }
@@ -321,18 +322,28 @@ public class NetworkManager {
     }
 
     public static boolean isHost() {
+        Debug.println("Host status", amHost + "");
         return amHost;
     }
 
     public void startServer(int port) {
         amHost = true;
-
         serverHints = new ServerSocketHints();
         serverHints.acceptTimeout = 0;
-        serverSocket = Gdx.net.newServerSocket(Protocol.TCP, port, serverHints);
-        ListenForPlayers listen = new ListenForPlayers();
-        listen.start();
+        while (true) {
+            Debug.println("Try to bind to port number", port + "");
+            try {
+                serverSocket = Gdx.net.newServerSocket(Protocol.TCP, port, serverHints);
+            } catch (Exception e) {
+                port++;
+                continue;
+            } finally {
+                ListenForPlayers listen = new ListenForPlayers();
+                listen.start();
+                break;
+            }
 
+        }
     }
 
     private static void sendFile(Socket sock, String filepath) throws IOException {
@@ -363,7 +374,7 @@ public class NetworkManager {
     }
 
     private Command parseMessage(String message, Socket originSocket) {
-        String[] messagecomponents = message.split(" ");
+        String[] messagecomponents = message.split("_");
         LinkedList<String> messageList = new LinkedList<>();
         for (String component : messagecomponents) {
             messageList.add(component);
@@ -374,6 +385,7 @@ public class NetworkManager {
     }
 
     public void connectToServer(String host, int port) {
+        amHost = false;
         clientSocket = Gdx.net.newClientSocket(Protocol.TCP, host, port, null);
         ListenForCommand commandListener = new ListenForCommand(clientSocket);
         commandListener.start(true);

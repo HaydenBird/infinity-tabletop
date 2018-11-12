@@ -198,10 +198,25 @@ public class UIManager {
         fileMenu.addItem(new MenuItem("Save"));
         fileMenu.addItem(new MenuItem("Save As"));
         fileMenu.addSeparator();
+        connectButton(fileMenu);
+        startServerButton(fileMenu);
+        fileMenu.addSeparator();
         MenuItem exit = new MenuItem("Exit", new ExitListener());
         exit.setShortcut(Input.Keys.ALT_LEFT, Input.Keys.F4);
         fileMenu.addItem(exit);
         menuBar.addMenu(fileMenu);
+    }
+
+    private static void connectButton(Menu fileMenu) {
+        MenuItem connect = new MenuItem("Connect");
+        connect.addListener(new ConnectListener());
+        fileMenu.addItem(connect);
+    }
+
+    private static void startServerButton(Menu fileMenu) {
+        MenuItem server = new MenuItem("Start Server");
+        server.addListener(new ServerStartListener());
+        fileMenu.addItem(server);
     }
 
     /**

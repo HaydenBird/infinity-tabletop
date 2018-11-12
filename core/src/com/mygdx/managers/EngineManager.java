@@ -188,7 +188,6 @@ public class EngineManager {
      */
     public static void createNewCampaign() {
         clean();
-        NetworkManager.getInstance().startServer(199);
         ListManager.nukeLists();
     }
 

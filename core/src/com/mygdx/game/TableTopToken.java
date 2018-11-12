@@ -122,12 +122,12 @@ public class TableTopToken extends Image {
     private void sendCreationMessage() {
         //  token [parent map id] [token id] [token X] [token Y] [layer] [image asset name] [file size] [message id]
         List<String> args = new LinkedList<>();
-        args.add(parentMap.getName() + " ");
-        args.add(tokenID + " ");
-        args.add(tokenID + " ");
-        args.add(position.x + " ");
-        args.add(position.y + " ");
-        args.add(texturePath + " ");
+        args.add(parentMap.getName() + "");
+        args.add(tokenID + "");
+        args.add(position.x + "");
+        args.add(position.y + "");
+        args.add(layer + "");
+        args.add(texturePath + "");
         args.add("0");
         args.add("MessageID");
         Command command = new Command(Command.CommandType.TOKEN, args, null);
@@ -262,6 +262,7 @@ public class TableTopToken extends Image {
         float newX = Math.round(x / DEFAULT_WIDTH) * DEFAULT_WIDTH;
         float newY = Math.round(y / DEFAULT_HEIGHT) * DEFAULT_HEIGHT;
         this.setPosition(newX, newY);
+        if (NetworkManager.isHost()) sendMovementMessage();
     }
 
     /**
@@ -275,18 +276,17 @@ public class TableTopToken extends Image {
         super.setPosition(x, y);
         this.position.set(x, y, 0);
         updateLightPositions();
-        sendMovementMessage();
     }
 
     private void sendMovementMessage() {
         List<String> arguments = new LinkedList<>();
-        arguments.add(tokenID + " ");
-        arguments.add(this.position.x + " ");
-        arguments.add(this.position.y + " ");
-        arguments.add(this.layer + " ");
-        arguments.add(this.width + " ");
-        arguments.add(this.height + " ");
-        arguments.add(this.getRotation() + " ");
+        arguments.add(tokenID + "");
+        arguments.add(this.position.x + "");
+        arguments.add(this.position.y + "");
+        arguments.add(this.layer + "");
+        arguments.add(this.width + "");
+        arguments.add(this.height + "");
+        arguments.add(this.getRotation() + "");
         arguments.add("MessageID");
         Command command = new Command(Command.CommandType.MOVE, arguments, null);
         NetworkManager.sendCommand(command, NetworkManager.getPlayers());
@@ -351,7 +351,7 @@ public class TableTopToken extends Image {
         }
         width = Math.max(width, DEFAULT_WIDTH);
         height = Math.max(height, DEFAULT_HEIGHT);
-        MapManager.getCurrentMap().getWorld().destroyBody(body);
+        if (body != null) MapManager.getCurrentMap().getWorld().destroyBody(body);
         createBody(MapManager.getCurrentMap().getWorld());
         super.setHeight(height);
         super.setWidth(width);

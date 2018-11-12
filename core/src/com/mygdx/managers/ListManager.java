@@ -20,8 +20,6 @@ public class ListManager {
      */
 
     public ListManager() {
-        // TODO Auto-generated constructor stub
-
         if (characterEntries == null) characterEntries = new LinkedList<>();
         if (npcEntries == null) npcEntries = new LinkedList<>();
         if (handoutEntries == null) handoutEntries = new LinkedList<>();

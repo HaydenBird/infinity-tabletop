@@ -32,7 +32,6 @@ public class ChatMessage extends Table {
      * @param skin       The libgdx skin to be styled by.
      */
     public ChatMessage(List<String> newMessage, Player sender, List<Player> recipients, Skin skin) {
-        //TODO: Chat message constructor without rolls
         timeStamp = new Date();
         this.recipients = recipients;
         this.sender = sender;

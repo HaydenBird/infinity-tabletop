@@ -83,6 +83,7 @@ public class NetworkManager {
     private static boolean amHost;
     private ServerSocketHints serverHints;
     private Socket clientSocket;
+    private Socket serverConnectTo;
 
     public NetworkManager() {
         sockets = new ConcurrentHashMap<>();
@@ -100,6 +101,7 @@ public class NetworkManager {
 
     public static void sendCommand(Command command) {
         Debug.println("Sending message to host", command.toString());
+        if (command.getSocket() == null) return;
         if (writers.get(command.getSocket()) == null) {
             writers.put(command.getSocket(), new PrintWriter(command.getSocket().getOutputStream()));
         }
@@ -326,6 +328,10 @@ public class NetworkManager {
         return amHost;
     }
 
+    public Socket getServer() {
+        return serverConnectTo;
+    }
+
     public void startServer(int port) {
         amHost = true;
         serverHints = new ServerSocketHints();
@@ -387,6 +393,7 @@ public class NetworkManager {
     public void connectToServer(String host, int port) {
         amHost = false;
         clientSocket = Gdx.net.newClientSocket(Protocol.TCP, host, port, null);
+        serverConnectTo = clientSocket;
         ListenForCommand commandListener = new ListenForCommand(clientSocket);
         commandListener.start(true);
     }

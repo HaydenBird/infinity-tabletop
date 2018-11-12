@@ -35,6 +35,7 @@ public class KeyListener extends InputListener {
         List<TableTopToken> tokens = MapManager.getSelectedTokens();
         if (tokens.size() == 0 || tokens == null) return false;
         for (TableTopToken token : tokens) {
+            if (!token.isMine()) continue;
             switch (keycode) {
                 case Input.Keys.UP:
                     token.snapToGrid(token.getX(), token.getY() + 70);

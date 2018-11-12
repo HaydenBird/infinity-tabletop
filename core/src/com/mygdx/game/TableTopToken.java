@@ -262,7 +262,7 @@ public class TableTopToken extends Image {
         float newX = Math.round(x / DEFAULT_WIDTH) * DEFAULT_WIDTH;
         float newY = Math.round(y / DEFAULT_HEIGHT) * DEFAULT_HEIGHT;
         this.setPosition(newX, newY);
-        if (NetworkManager.isHost()) sendMovementMessage();
+        sendMovementMessage();
     }
 
     /**
@@ -288,8 +288,12 @@ public class TableTopToken extends Image {
         arguments.add(this.height + "");
         arguments.add(this.getRotation() + "");
         arguments.add("MessageID");
-        Command command = new Command(Command.CommandType.MOVE, arguments, null);
-        NetworkManager.sendCommand(command, NetworkManager.getPlayers());
+        Command command = new Command(Command.CommandType.MOVE, arguments, NetworkManager.getInstance().getServer());
+        if (NetworkManager.isHost()) {
+            NetworkManager.sendCommand(command, NetworkManager.getPlayers());
+        } else {
+            NetworkManager.sendCommand(command);
+        }
 
     }
 
@@ -368,6 +372,10 @@ public class TableTopToken extends Image {
         return tokenID;
     }
 
+    public boolean isMine() {
+        return owners.contains(EngineManager.getCurrentPlayer());
+    }
+
 
     /**
      * This class is the listener for the token being dragged
@@ -381,7 +389,7 @@ public class TableTopToken extends Image {
 
         public void drag(InputEvent event, float x, float y, int pointer) {
             Debug.println("Dragging", "X: " + x + ", Y: " + y);
-            if (!MapManager.getSelectedTokens().contains(thisToken)) {
+            if (!MapManager.getSelectedTokens().contains(thisToken) && thisToken.isMine()) {
                 if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) {
                     MapManager.setSelectedToken(thisToken);
                 } else {
@@ -392,6 +400,7 @@ public class TableTopToken extends Image {
 
             }
             for (TableTopToken a : MapManager.getSelectedTokens()) {
+                if (!thisToken.isMine()) continue;
                 a.position.x += x;
                 a.position.y += y;
                 a.setPosition(a.position.x - a.getWidth() / 2, a.position.y - a.getHeight() / 2);
@@ -403,6 +412,7 @@ public class TableTopToken extends Image {
         public void dragStop(InputEvent event, float x, float y, int pointer) {
 
             for (TableTopToken a : MapManager.getSelectedTokens()) {
+                if (!thisToken.isMine()) continue;
                 a.snapToGrid(a.position.x, a.position.y);
             }
         }

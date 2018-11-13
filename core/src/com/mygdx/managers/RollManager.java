@@ -65,7 +65,7 @@ public class RollManager {
      */
     private RollContainer parseRollCommands(List<String> rollCommands) throws IncorrectFormattingError {
         Pattern dicePattern = Pattern.compile("(\\d+)d(\\d+)"); //Finds the number and size of the dice
-        Pattern modPattern = Pattern.compile("\\d+d\\d+\\+(\\d*)"); //Finds the modifier of the dice
+        Pattern modPattern = Pattern.compile("\\d+d\\d+\\+(\\d*\\.?\\d*)"); //Finds the modifier of the dice
         Pattern commandPattern = Pattern.compile("-[^-]+"); //Finds the roll parameters
         List<DicePool> diceResults = new LinkedList<>();
         for (String command : rollCommands) { //For each command
@@ -119,7 +119,7 @@ public class RollManager {
      */
     private float findDiceModifier(Matcher modMatcher) {
         float diceModifier = 0;
-        while (modMatcher.find()) diceModifier += Integer.parseInt(modMatcher.group(1));
+        while (modMatcher.find()) diceModifier += Float.parseFloat(modMatcher.group(1));
         return diceModifier;
     }
 

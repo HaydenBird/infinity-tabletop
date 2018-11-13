@@ -9,9 +9,11 @@ import com.kotcrab.vis.ui.widget.VisDialog;
 import com.mygdx.managers.EngineManager;
 import com.mygdx.managers.UIManager;
 
-import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * This object acts as a container for a group of dice rolls, and displays the total result, and can be clicked to open a dialogue
@@ -47,8 +49,9 @@ public class DicePool extends TextButton {
                     }
 
                 }
-                BigDecimal bd = new BigDecimal(String.valueOf(modifier)); //Strip all the trailing zeroes from the modifier
-                diceDialog.text(" +" + bd.stripTrailingZeros().toPlainString());
+                DecimalFormat df = new DecimalFormat("0", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
+                df.setMaximumFractionDigits(340);
+                diceDialog.text(df.format(result));
                 diceDialog.addListener(new InputListener() {//Add listener to close the dialogue box
                     public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                         diceDialog.hide();
@@ -85,8 +88,9 @@ public class DicePool extends TextButton {
     public void addDice(DiceResult dice) {
         diceResults.add(dice);
         result += dice.getFinalResult();
-        BigDecimal bd = new BigDecimal(String.valueOf(result));
-        this.setText(bd.stripTrailingZeros().toPlainString());
+        DecimalFormat df = new DecimalFormat("0", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
+        df.setMaximumFractionDigits(340); //340 = DecimalFormat.DOUBLE_FRACTION_DIGITS
+        this.setText(df.format(result));
     }
 
     /**
@@ -97,6 +101,9 @@ public class DicePool extends TextButton {
     public void addMod(float modifier) {
         this.modifier += modifier;
         this.result += modifier;
+        DecimalFormat df = new DecimalFormat("0", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
+        df.setMaximumFractionDigits(340);
+        this.setText(df.format(result));
     }
 
     /**

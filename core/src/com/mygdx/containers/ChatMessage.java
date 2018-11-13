@@ -34,6 +34,7 @@ public class ChatMessage extends Table {
     public ChatMessage(List<String> newMessage, Player sender, List<Player> recipients, Skin skin) {
         timeStamp = new Date();
         this.recipients = recipients;
+        if (this.recipients == null) this.recipients = new LinkedList<>();
         this.sender = sender;
         this.message = new LinkedList<>();
         this.message = newMessage;
@@ -54,6 +55,7 @@ public class ChatMessage extends Table {
     public ChatMessage(List<String> fragmentedMessage, Player sender, List<Player> recipients, RollContainer rolls, Skin skin) {
         timeStamp = new Date();
         this.recipients = recipients;
+        if (this.recipients == null) this.recipients = new LinkedList<>();
         this.sender = sender;
         this.message = fragmentedMessage;
         this.rolls = rolls;
@@ -85,6 +87,42 @@ public class ChatMessage extends Table {
             }
             this.row();
         }
+    }
+
+    public Command getNetworkCommand() {
+        //chat [number of messages] [number of rolls] [message 1] ... [message n] [roll 1] ... [rolls n] [style] [from] [number of recipients] [recipient id 1] .. [recipient id 2] [message id]
+        List<String> args = new LinkedList<>();
+        args.add(message.size() + "");
+        args.add(rolls.getRollResults().size() + "");
+        for (String s : message) {
+            args.add(s);
+        }
+        for (DicePool dp : rolls.getRollResults()) {
+            String diceResultString = "";
+            for (DiceResult dr : dp.getDice()) {
+                //[hover string]--[final result]]@[result 2]...@[result n]
+
+                diceResultString += dr.getHistory();
+                diceResultString += "--";
+                diceResultString += dr.getFinalResult();
+                diceResultString += "@";
+
+            }
+            args.add(diceResultString.substring(0, diceResultString.length() - 1));
+        }
+        //Style
+        args.add("STYLEPLACEHOLDER");
+        //from
+        args.add(sender.getUserId());
+        //number of recipients
+        args.add(recipients.size() + "");
+        //Recipient ids
+        for (Player p : recipients) {
+            args.add(p.getUserId());
+        }
+        Command command = new Command(Command.CommandType.CHAT, args, null);
+        return command;
+
     }
 
 }

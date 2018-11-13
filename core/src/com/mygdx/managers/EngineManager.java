@@ -54,10 +54,10 @@ public class EngineManager {
         }
 
         hudCamera = new OrthographicCamera();
+        initPlayer();
         EngineManager.getUiManager();
         UIManager.init();
         MapManager.getInstance();
-        initPlayer();
     }
 
     /**

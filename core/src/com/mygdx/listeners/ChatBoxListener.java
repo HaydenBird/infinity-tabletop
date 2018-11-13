@@ -26,7 +26,8 @@ public class ChatBoxListener extends InputListener {
             if (chatLogContainer.isBottomEdge()) {
                 isBottom = true;
             }
-            chatLog.add(EngineManager.getRollManager().parseMessage(chatEntry.getText())).fill().expand().row();
+            String text = chatEntry.getText().replace("‗", "_");
+            chatLog.add(EngineManager.getRollManager().parseMessage(text)).fill().expand().row();
             chatEntry.setText(null);
             if (isBottom) {
                 chatLogContainer.layout();

@@ -7,6 +7,7 @@ import com.mygdx.managers.EngineManager;
 import java.util.Random;
 
 public class DiceResult extends Label {
+    private final String hoverText;
     private int initialRoll;
     private int advantage;
     private int advantageRoll;
@@ -34,6 +35,7 @@ public class DiceResult extends Label {
      */
     public DiceResult(int size, int advantage, String rerollTrigger, int rerollThreshold, String replaceTrigger, int replaceThreshold, int replaceValue) {
         super("", EngineManager.getSkin());
+        hoverText = null;
         Random generator = new Random();
         this.replacedValue = replaceValue;
         this.advantage = advantage;
@@ -101,6 +103,15 @@ public class DiceResult extends Label {
         this.addListener(new TextTooltip(getHistory(), EngineManager.getSkin()));
     }
 
+    public DiceResult(String hoverText, int finalResult) {
+        super(finalResult + "", EngineManager.getSkin());
+        this.hoverText = hoverText;
+        this.finalResult = finalResult;
+        TextTooltip.TextTooltipStyle style = EngineManager.getSkin().get(TextTooltip.TextTooltipStyle.class);
+        style.wrapWidth = 350;
+        this.addListener(new TextTooltip(getHistory(), EngineManager.getSkin()));
+    }
+
     /**
      * @return the sum of all the dice and the modifier
      */
@@ -112,6 +123,7 @@ public class DiceResult extends Label {
      * @return A string that shows what each step of the resolution process looked like
      */
     public String getHistory() {
+        if (hoverText != null) return hoverText;
         String history = "Rolled a " + initialRoll;
         if (advantage < 0) {
             history += ". The dice had disadvantage so roll a second dice: " + advantageRoll + ", choose to keep " + Math.min(advantageRoll, initialRoll);

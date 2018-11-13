@@ -41,7 +41,7 @@ public class TableTopToken extends Image {
     private List<Player> owners;
     private final String tokenID;
 
-    private final TextureRegion textureRegion;
+    private TextureRegion textureRegion;
 
     private PointLight selfLight;
 
@@ -141,11 +141,15 @@ public class TableTopToken extends Image {
         tokenMap.put(token.getTokenID(), token);
     }
 
+    public void changeTexture(String imagePath) {
+        this.textureRegion = new TextureRegion(EngineManager.getTexture(imagePath));
+        this.texturePath = imagePath;
+    }
+
     /**
      * This method adds the listeners that allow you to interact with the token with your mouse
      */
     private void addClickListeners() {
-        TableTopToken thisToken = this;
         this.addListener(new TokenDragListener(this));
         this.addListener(new TokenClickListener(this));
     }
@@ -174,7 +178,7 @@ public class TableTopToken extends Image {
     /**
      * This method updates the locations of the physics bodies and lights so they match the position of the token
      */
-    private void updateLightPositions() {
+    public void updateLightPositions() {
         if (omniLight != null) {
             omniLight.setPosition(position.x + width / 2, position.y + height / 2);
         }
@@ -257,6 +261,7 @@ public class TableTopToken extends Image {
      */
     public void snapToGrid(float x, float y) {
         if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) {
+            sendMovementMessage();
             return;
         }
         float newX = Math.round(x / DEFAULT_WIDTH) * DEFAULT_WIDTH;
@@ -355,8 +360,10 @@ public class TableTopToken extends Image {
         }
         width = Math.max(width, DEFAULT_WIDTH);
         height = Math.max(height, DEFAULT_HEIGHT);
-        if (body != null) MapManager.getCurrentMap().getWorld().destroyBody(body);
-        createBody(MapManager.getCurrentMap().getWorld());
+        if (body != null) {
+            MapManager.getCurrentMap().getWorld().destroyBody(body);
+            createBody(MapManager.getCurrentMap().getWorld());
+        }
         super.setHeight(height);
         super.setWidth(width);
     }

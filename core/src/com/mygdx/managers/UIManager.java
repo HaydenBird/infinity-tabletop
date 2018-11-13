@@ -20,6 +20,7 @@ import com.kotcrab.vis.ui.widget.*;
 import com.kotcrab.vis.ui.widget.file.FileChooser;
 import com.kotcrab.vis.ui.widget.file.FileTypeFilter;
 import com.kotcrab.vis.ui.widget.tabbedpane.TabbedPane;
+import com.mygdx.containers.ChatMessage;
 import com.mygdx.game.MyGdxGame;
 import com.mygdx.game.TableTopMap;
 import com.mygdx.listeners.*;
@@ -381,10 +382,6 @@ public class UIManager {
         chatContainer.row();
         chatContainer.add(chatEntry).fillX().expandX();
         container.add(chatContainer).fill().expand().colspan(2);
-        for (int i = 1; i < 5; i++) {
-            chatLog.add(EngineManager.getRollManager().parseMessage("Chat message [1d12] [1d12] [1d12]")).fill().expand();
-            chatLog.row();
-        }
 
     }
 
@@ -443,5 +440,10 @@ public class UIManager {
 
     public static TabbedPane getMapPanes() {
         return mapPanes;
+    }
+
+    public static void addChat(ChatMessage chatMessage) {
+        chatLog.add(chatMessage).fill().expand().row();
+        chatLog.row();
     }
 }

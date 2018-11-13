@@ -61,6 +61,20 @@ public class DicePool extends TextButton {
         });
     }
 
+    public static DicePool createFromString(String string) {
+        //String format for dice rolls [[hover string]--[final result]]@[result 2]...@[result n]
+        DicePool newPool = new DicePool();
+        String[] parts = string.split("@");
+        for (int i = 0; i < parts.length; i++) { //We want to ignore the last @
+            String[] format = parts[i].split("--");
+            String hoverText = format[0];
+            int finalVal = Integer.parseInt(format[1]);
+            DiceResult result = new DiceResult(hoverText, finalVal);
+            newPool.addDice(result);
+        }
+        return newPool;
+    }
+
     /**
      * This method adds a new dice to the pool
      *

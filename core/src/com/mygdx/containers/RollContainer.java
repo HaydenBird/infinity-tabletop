@@ -29,6 +29,7 @@ public class RollContainer {
      *
      * @param rollResults  the list of dice results
      * @param rollCommands the list of commands
+     *
      */
 
 
@@ -36,4 +37,9 @@ public class RollContainer {
         this.rollResults = rollResults;
         this.rollCommands = rollCommands;
     }
+
+    public RollContainer(List<DicePool> rollResults) {
+        this.rollResults = rollResults;
+    }
+
 }

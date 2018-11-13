@@ -32,10 +32,14 @@ public class RollManager {
         List<String> text = new LinkedList<>(Arrays.asList(newMessage.split("\\[[^\\]\\[]+\\]")));
         try {
             RollContainer rollResults = parseRollCommands(rollCommands);
-            return new ChatMessage(text, EngineManager.getCurrentPlayer(), null, rollResults, EngineManager.getSkin());
+            ChatMessage message = new ChatMessage(text, EngineManager.getCurrentPlayer(), null, rollResults, EngineManager.getSkin());
+            NetworkManager.sendCommand(message.getNetworkCommand(), NetworkManager.getPlayers());
+            return message;
         } catch (IncorrectFormattingError e) {
             Debug.println("Formatting error", "Debug");
-            return new ChatMessage(text, EngineManager.getCurrentPlayer(), null, EngineManager.getSkin());
+            ChatMessage message = new ChatMessage(text, EngineManager.getCurrentPlayer(), null, EngineManager.getSkin());
+            NetworkManager.sendCommand(message.getNetworkCommand(), NetworkManager.getPlayers());
+            return message;
         }
 
     }

@@ -6,7 +6,10 @@ import com.badlogic.gdx.net.ServerSocket;
 import com.badlogic.gdx.net.ServerSocketHints;
 import com.badlogic.gdx.net.Socket;
 import com.badlogic.gdx.net.SocketHints;
+import com.mygdx.containers.ChatMessage;
 import com.mygdx.containers.Command;
+import com.mygdx.containers.DicePool;
+import com.mygdx.containers.RollContainer;
 import com.mygdx.game.TableTopMap;
 import com.mygdx.game.TableTopToken;
 import com.mygdx.tabletop.Player;
@@ -110,6 +113,9 @@ public class NetworkManager {
     }
 
     public static void sendCommand(Command command, List<Player> recipients) {
+        if (!isHost()) { //If we arent the host send to the host
+            return;
+        }
         for (Player recipient : recipients) {
             Debug.println("Sending message to", recipient.getDisplayName());
             Socket playerSocket = sockets.get(recipient);
@@ -196,22 +202,29 @@ public class NetworkManager {
                 moveToken(currentCommand);
                 break;
             case CHANGE_IMAGE:
+                changeTexture(currentCommand);
                 break;
             case LIGHT_CHANGE:
+                changeLight(currentCommand);
                 break;
             case ASSOCIATE:
                 break;
             case NEW_ENTRY:
+                //TODO: Entries
                 break;
             case LINK_ENTRY:
                 break;
             case NEW_MAP:
+                newMap(currentCommand);
                 break;
             case MOVE_TO_MAP:
+                moveToMap(currentCommand);
                 break;
             case MOVE_ALL_TO_MAP:
+                moveAllMap(currentCommand);
                 break;
             case CHAT:
+                sendChatMessage(currentCommand);
                 break;
             case NEW_FILE:
                 break;
@@ -232,14 +245,84 @@ public class NetworkManager {
         }
     }
 
+    private static void sendChatMessage(Command command) {
+        //chat [number of messages] [number of rolls] [message 1] ... [message n] [roll 1] ... [rolls n] [style] [from] [number of recipients] [recipient id 1] .. [recipient id 2] [message id]
+        Debug.println("Handle chat", "Start");
+        int messageCount = Integer.parseInt(command.get(0));
+        Debug.println("Handle chat", "Got msg count");
+        int rollCount = Integer.parseInt(command.get(1));
+        Debug.println("Handle chat", "Got roll count");
+        List<String> messages = new LinkedList<>();
+        List<DicePool> rolls = new LinkedList<>();
+        int index = 2;
+        Debug.println("Handle chat", "Starting to get msgs");
+        for (int i = 0; i < messageCount; i++) {
+            messages.add(command.get(index++));
+            Debug.println("Handle chat", "Got a message");
+        }
+        Debug.println("Handle chat", "Finished messages, starting rolls");
+        for (int i = 0; i < rollCount; i++) {
+            rolls.add(DicePool.createFromString(command.get(index++)));
+            Debug.println("Handle chat", "Got roll");
+        }
+        Debug.println("Handle chat", "Finish rolls");
+        String style = command.get(index++);
+        Debug.println("Handle chat", "Got Style");
+        Player from = getPlayerFromId(command.get(index++));
+        int recipientCount = Integer.parseInt(command.get(index++));
+        Debug.println("Handle chat", "Got recipient count, it is " + recipientCount);
+        Debug.println("Handle chat", "Starting to get recipients");
+        List<Player> recipients = new LinkedList<>();
+        for (int i = 0; i < recipientCount; i++) {
+            recipients.add(getPlayerFromId(command.get(index++)));
+            Debug.println("Handle chat", "Got recipient number " + i);
+        }
+        Debug.println("Handle chat", "Got recipients");
+        RollContainer rollContainer = new RollContainer(rolls);
+        ChatMessage chatMessage = new ChatMessage(messages, from, recipients, rollContainer, EngineManager.getSkin());
+        UIManager.addChat(chatMessage);
+
+        //if we are the host, send it to all recipients
+        if (isHost()) {
+            List<Player> propagateRecipients = new LinkedList<>(recipients);
+            propagateRecipients.remove(EngineManager.getCurrentPlayer());
+            sendCommand(command, propagateRecipients);
+        }
+
+    }
+
+    private static Player getPlayerFromId(String s) {
+        for (Player p : getPlayers()) {
+            if (s.equals(p.getUserId())) {
+                return p;
+            }
+        }
+        return null;
+    }
+
+    private static void moveAllMap(Command currentCommand) {
+    }
+
+    private static void moveToMap(Command currentCommand) {
+    }
+
+    private static void newMap(Command currentCommand) {
+        //TODO: Map controls
+    }
+
+    private static void changeLight(Command currentCommand) {
+        //TODO: Change light
+    }
+
+    private static void changeTexture(Command currentCommand) {
+        //TODO: Change texture
+    }
+
     private static void handleNewConnect(Command command) {
         //connect [display name] [id] [password hash] [message id]
         //Get the player assigned to the socket
         Socket playerSocket = command.getSocket();
-        Player curPlayer = null;
-        for (Map.Entry<Player, Socket> e : sockets.entrySet()) {
-            if (e.getValue().equals(playerSocket)) curPlayer = e.getKey();
-        }
+        Player curPlayer = getPlayerFromSocket(playerSocket);
         if (curPlayer == null) return;
         String displayName = command.get(0);
         String id = command.get(1);
@@ -255,6 +338,13 @@ public class NetworkManager {
         //Make sure to create all the entries they have access to
         sendEntries(curPlayer);
 
+    }
+
+    private static Player getPlayerFromSocket(Socket sock) {
+        for (Map.Entry<Player, Socket> e : sockets.entrySet()) {
+            if (e.getValue().equals(sock)) return e.getKey();
+        }
+        return null;
     }
 
     private static void sendEntries(Player curPlayer) {
@@ -312,7 +402,11 @@ public class NetworkManager {
         token.setPosition(x, y);
         token.setSize(width, height);
         token.setLayer(layer);
+        token.updateLightPositions();
         //TODO: handle rotation
+
+        //Now if you are the host, send the message to all players, the senders token is already in place but that's ok
+        if (isHost()) sendCommand(command, getPlayers());
     }
 
     private static void sendMessage(Socket socket, Command command) {
@@ -380,7 +474,7 @@ public class NetworkManager {
     }
 
     private Command parseMessage(String message, Socket originSocket) {
-        String[] messagecomponents = message.split("_");
+        String[] messagecomponents = message.split("‗");
         LinkedList<String> messageList = new LinkedList<>();
         for (String component : messagecomponents) {
             messageList.add(component);

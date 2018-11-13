@@ -62,15 +62,17 @@ public class DicePool extends TextButton {
     }
 
     public static DicePool createFromString(String string) {
-        //String format for dice rolls [[hover string]--[final result]]@[result 2]...@[result n]
+        //String format for dice rolls [[hover string]--[final result]]@[mod1]@[result 2]@[mod2]@...@[result n]@[modn]
         DicePool newPool = new DicePool();
         String[] parts = string.split("@");
-        for (int i = 0; i < parts.length; i++) { //We want to ignore the last @
+        for (int i = 0; i < parts.length - 1; i += 2) {
             String[] format = parts[i].split("--");
             String hoverText = format[0];
             int finalVal = Integer.parseInt(format[1]);
+            float mod = Float.parseFloat(parts[i + 1]);
             DiceResult result = new DiceResult(hoverText, finalVal);
             newPool.addDice(result);
+            newPool.addMod(mod);
         }
         return newPool;
     }
@@ -107,4 +109,7 @@ public class DicePool extends TextButton {
     }
 
 
+    public float getMod() {
+        return modifier;
+    }
 }

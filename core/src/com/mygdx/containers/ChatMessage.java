@@ -108,7 +108,8 @@ public class ChatMessage extends Table {
                 diceResultString += "@";
 
             }
-            args.add(diceResultString.substring(0, diceResultString.length() - 1));
+            diceResultString += dp.getMod() + "";
+            args.add(diceResultString);
         }
         //Style
         args.add("STYLEPLACEHOLDER");

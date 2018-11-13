@@ -227,6 +227,7 @@ public class NetworkManager {
                 sendChatMessage(currentCommand);
                 break;
             case NEW_FILE:
+                //TODO: file handling
                 break;
             case NEW_ASSET:
                 break;

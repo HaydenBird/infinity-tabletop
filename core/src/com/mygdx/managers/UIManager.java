@@ -9,10 +9,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextField;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -377,10 +374,16 @@ public class UIManager {
         chatLogContainer.setScrollingDisabled(false, false);
         chatContainer.add(chatLogContainer).fill().expand();
         colorBackground(chatContainer, Color.DARK_GRAY);
+
         TextField chatEntry = new TextField("", EngineManager.getSkin());
         chatEntry.addListener(new ChatBoxListener(chatEntry, chatLog, chatLogContainer));
-        chatContainer.row();
-        chatContainer.add(chatEntry).fillX().expandX();
+        Table entryBoxContainer = new Table();
+        chatContainer.row().growX();
+        entryBoxContainer.add(chatEntry).growX();
+        TextButton openPlayerList = new TextButton("P", EngineManager.getSkin());
+        openPlayerList.addListener(new PlayerListListener());
+        entryBoxContainer.add(openPlayerList);
+        chatContainer.add(entryBoxContainer).expandX().fillX();
         container.add(chatContainer).fill().expand().colspan(2);
 
     }

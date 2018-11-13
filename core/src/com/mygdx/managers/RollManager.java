@@ -129,10 +129,10 @@ public class RollManager {
      * @param diceNumber     the list of how many dice for each roll
      * @param diceSize       what size those dice are
      * @param advantage      whether the dice have advantage
-     * @param reroll         wheter the dice need to reroll
+     * @param reroll         whether the dice need to reroll
      * @param rerollTrigger  what triggers the reroll
      * @param replace        whether the dice are replaced
-     * @param replaceValue   what to recplace with
+     * @param replaceValue   what to replace with
      * @param replaceTrigger what triggers the replace
      * @param diceResults    the list tostore the results
      */

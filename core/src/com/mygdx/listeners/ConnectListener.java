@@ -5,8 +5,11 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.kotcrab.vis.ui.util.Validators;
 import com.kotcrab.vis.ui.util.dialog.Dialogs;
 import com.kotcrab.vis.ui.util.dialog.InputDialogAdapter;
+import com.mygdx.managers.EngineManager;
 import com.mygdx.managers.NetworkManager;
 import com.mygdx.managers.UIManager;
+
+import java.util.UUID;
 
 public class ConnectListener extends ChangeListener {
     @Override
@@ -18,7 +21,14 @@ public class ConnectListener extends ChangeListener {
                 Dialogs.showInputDialog(UIManager.getStage(), "enter int number", null, new Validators.IntegerValidator(), new InputDialogAdapter() {
                     @Override
                     public void finished(String port) {
-                        NetworkManager.getInstance().connectToServer(host, Integer.parseInt(port));
+                        Dialogs.showInputDialog(UIManager.getStage(), "Enter a display name", "Name: ", new InputDialogAdapter() {
+                            @Override
+                            public void finished(String input) {
+                                EngineManager.getCurrentPlayer().setDisplayName(input);
+                                EngineManager.getCurrentPlayer().setId(UUID.randomUUID().toString());
+                                NetworkManager.getInstance().connectToServer(host, Integer.parseInt(port));
+                            }
+                        });
                     }
                 });
             }

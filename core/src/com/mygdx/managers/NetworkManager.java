@@ -2,6 +2,7 @@ package com.mygdx.managers;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Net.Protocol;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.net.ServerSocket;
 import com.badlogic.gdx.net.ServerSocketHints;
 import com.badlogic.gdx.net.Socket;
@@ -369,6 +370,23 @@ public class NetworkManager {
 
     private static void changeLight(Command currentCommand) {
         //TODO: Change light
+        //lightchange [token id] [light type] [light color] [light distance] [angle] [rotation] [active]
+        TableTopToken token = TableTopToken.getTokenMap().get(currentCommand.get(0));
+        Color lightColor = new Color(Integer.parseInt(currentCommand.get(2)));
+        float distance = Float.parseFloat(currentCommand.get(3));
+        float angle = Float.parseFloat(currentCommand.get(4));
+        float rotation = Float.parseFloat(currentCommand.get(5));
+        boolean active = Boolean.parseBoolean(currentCommand.get(6));
+        switch (currentCommand.get(1)) {
+            case "point":
+                token.enableOmniLight(lightColor, distance);
+                if (!active) token.disableOmniLight();
+                break;
+            case "cone":
+                token.enableConeLight(lightColor, distance, angle, rotation);
+                if (!active) token.disableConeLight();
+                break;
+        }
     }
 
     public static boolean isHost() {

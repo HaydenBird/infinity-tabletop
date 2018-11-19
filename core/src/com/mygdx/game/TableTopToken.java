@@ -163,7 +163,9 @@ public class TableTopToken extends Image {
     private Entry linkedEntry;
     private float[] valuesCurrent;
     private float[] valuesMax;
+
     private ConeLight coneLight;
+
     private PointLight omniLight;
 
     public static Map<String, TableTopToken> getTokenMap() {
@@ -182,18 +184,32 @@ public class TableTopToken extends Image {
     public void updateLightPositions() {
         if (omniLight != null) {
             omniLight.setPosition(position.x + width / 2, position.y + height / 2);
+            sendOLightCommand();
         }
         if (coneLight != null) {
             coneLight.setPosition(position.x + width / 2, position.y + height / 2);
+            sendCLightCommand();
         }
 
         if (body != null) {
             body.setTransform(position.x + width / 2, position.y + height / 2, 0);
+            sendBodyCommand();
         }
 
         if (selfLight != null) {
             selfLight.setPosition(position.x + width / 2, position.y + height / 2);
         }
+    }
+
+    private void sendBodyCommand() {
+
+    }
+
+    private void sendCLightCommand() {
+
+    }
+
+    private void sendOLightCommand() {
     }
 
     /**
@@ -243,6 +259,11 @@ public class TableTopToken extends Image {
         }
     }
 
+    public void disableConeLight() {
+        if (coneLight != null) {
+            coneLight.setActive(false);
+        }
+    }
     /**
      * This method overrides the normal draw method
      *
@@ -348,6 +369,12 @@ public class TableTopToken extends Image {
         }
     }
 
+    public void renableConeLight() {
+        if (coneLight != null) {
+            coneLight.setActive(true);
+        }
+    }
+
     public void snapToSize() {
         Debug.println("Snap to size", "Width=" + this.getWidth() + ", Height=" + this.getHeight());
         if (Gdx.input.isKeyPressed(Input.Keys.ALT_LEFT)) {
@@ -361,10 +388,8 @@ public class TableTopToken extends Image {
         }
         width = Math.max(width, DEFAULT_WIDTH);
         height = Math.max(height, DEFAULT_HEIGHT);
-        if (body != null) {
-            MapManager.getCurrentMap().getWorld().destroyBody(body);
-            createBody(MapManager.getCurrentMap().getWorld());
-        }
+        destroyBody();
+        createBody(MapManager.getCurrentMap().getWorld());
         super.setHeight(height);
         super.setWidth(width);
     }
@@ -382,6 +407,33 @@ public class TableTopToken extends Image {
 
     public boolean isMine() {
         return owners.contains(EngineManager.getCurrentPlayer());
+    }
+
+    public void enableConeLight(Color lightColor, float distance, float angle, float rotation) {
+        if (coneLight == null) {
+            coneLight = new ConeLight(EngineManager.getRayHandler(null), 128, lightColor, distance, position.x + width / 2, position.y + height / 2, rotation, angle);
+        } else {
+            coneLight.setDistance(distance);
+            coneLight.setColor(lightColor);
+            coneLight.setDirection(rotation);
+            coneLight.setConeDegree(angle);
+        }
+        coneLight.setStaticLight(false);
+        coneLight.setActive(true);
+        coneLight.setSoft(true);
+        coneLightOn = true;
+    }
+
+    public boolean hasBody() {
+        return (body != null);
+    }
+
+    public void destroyBody() {
+        if (body != null) {
+            MapManager.getCurrentMap().getWorld().destroyBody(body);
+            body = null;
+        }
+
     }
 
 

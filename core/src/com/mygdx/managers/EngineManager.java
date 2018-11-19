@@ -259,6 +259,10 @@ public class EngineManager {
         return currentPlayer;
     }
 
+    public static World getWorld() {
+        return world;
+    }
+
     private void initPlayer() {
         EngineManager.currentPlayer = new Player("Mee", "1234");
 

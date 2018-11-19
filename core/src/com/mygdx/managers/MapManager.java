@@ -71,12 +71,15 @@ public class MapManager {
         if (currentMap != null) {
             for (TableTopToken token : currentMap.getMapLayerTokens()) {
                 token.disableOmniLight();
+                token.disableConeLight();
             }
             for (TableTopToken token : currentMap.getTokenLayerTokens()) {
                 token.disableOmniLight();
+                token.disableConeLight();
             }
             for (TableTopToken token : currentMap.getBlockingLayerTokens()) {
                 token.disableOmniLight();
+                token.disableConeLight();
             }
         }
         currentMap = map;
@@ -87,12 +90,13 @@ public class MapManager {
 
         for (TableTopToken token : currentMap.getMapLayerTokens()) {
             token.renableOmniLight();
+            token.renableConeLight();
         }
         for (TableTopToken token : currentMap.getTokenLayerTokens()) {
-            token.renableOmniLight();
+            token.renableConeLight();
         }
         for (TableTopToken token : currentMap.getBlockingLayerTokens()) {
-            token.renableOmniLight();
+            token.renableConeLight();
         }
         clearSelectedTokens();
     }

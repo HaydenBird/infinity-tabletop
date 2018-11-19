@@ -281,7 +281,11 @@ public class UIManager {
         MenuItem addLight = new MenuItem("Lighting");
         PopupMenu lightSubMenu = new PopupMenu();
         MenuItem omniLightButton = new MenuItem("Omnidirectional Light", new AddOmniLightListener());
+        MenuItem coneLightButton = new MenuItem("Cone Light", new AddConeLightListener());
+        MenuItem shadowsButton = new MenuItem("Shadows", new AddShadowsListener());
         lightSubMenu.addItem(omniLightButton);
+        lightSubMenu.addItem(coneLightButton);
+        lightSubMenu.addItem(shadowsButton);
         addLight.setSubMenu(lightSubMenu);
         tokenMenu.addItem(addLight);
     }

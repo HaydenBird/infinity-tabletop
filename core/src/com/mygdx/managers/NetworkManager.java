@@ -19,6 +19,7 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  *
@@ -30,7 +31,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * response [message id] [response code]
  *
  * New asset
- *  newasset [file path] [filelength] [file hash] [message id]
+ *  //newasset [host] [port][file size] [file path] [file hash] [message id]
  *
  * Player connect message:
  *  connect [display name] [id] [password hash] [message id]
@@ -78,20 +79,26 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public class NetworkManager {
 
+    private static final String PLACEHOLDER_FILEPATH = "assets/badlogic.jpg";
     private static ServerSocket serverSocket;
     private static ConcurrentHashMap<Player, Socket> sockets;
     private static ConcurrentHashMap<Socket, PrintWriter> writers;
     private static Queue<Command> commandQueue; //This is the only place in which the networking threads will communicate with the main thread
+    private static Queue<Command> pendingQueue;
     private static NetworkManager instance;
     private static boolean amHost;
+    private static int fileServerPort;
     private ServerSocketHints serverHints;
     private Socket clientSocket;
     private Socket serverConnectTo;
+    private List<String> isDownloading;
 
     public NetworkManager() {
         sockets = new ConcurrentHashMap<>();
         writers = new ConcurrentHashMap<>();
         commandQueue = new ConcurrentLinkedQueue<>();
+        pendingQueue = new ConcurrentLinkedQueue<>();
+        isDownloading = new CopyOnWriteArrayList<>();
         amHost = false;
     }
 
@@ -101,6 +108,31 @@ public class NetworkManager {
         }
         return instance;
     }
+
+    private static Player getPlayerFromSocket(Socket sock) {
+        for (Map.Entry<Player, Socket> e : sockets.entrySet()) {
+            if (e.getValue().equals(sock)) return e.getKey();
+        }
+        return null;
+    }
+
+    private static Player getPlayerFromId(String s) {
+        for (Player p : getPlayers()) {
+            if (s.equals(p.getUserId())) {
+                return p;
+            }
+        }
+        return null;
+    }
+
+    private static int getFileServerPort() {
+        return fileServerPort;
+    }
+
+    public static void setFileServerPort(int port) {
+        fileServerPort = port;
+    }
+
 
     public static void sendCommand(Command command) {
         Debug.println("Sending message to host", command.toString());
@@ -129,58 +161,18 @@ public class NetworkManager {
         }
     }
 
-    private static void newFile(Command currentCommand, String filePath, int filesize) {
-        //Check to see if we have a file with that name
-        File file = new File(filePath);
-        if (file.exists()) {
-
-            //If yes then
-            //Check to see if the hash is the same
-            //If Yes, send response saying so and return
-            //If no, overwrite
-        }
-        //If no then continue
-        //Receive the file
-        return;/*
-        try {
-            receiveFile(file, currentCommand.getSocket(), filesize);
-        } catch (IOException e) {
-            //Sends response
-        }*/
-
-    }
-
-    private static void receiveFile(File file, Socket socket, int fileSize) throws IOException {
-        int bytesRead;
-        int current;
-        FileOutputStream fos = null;
-        BufferedOutputStream bos = null;
-        try {
-            // receive file
-            byte[] byteArray = new byte[fileSize];
-            InputStream is = socket.getInputStream();
-            fos = new FileOutputStream(file);
-            bos = new BufferedOutputStream(fos);
-            bytesRead = is.read(byteArray, 0, byteArray.length);
-            current = bytesRead;
-            do {
-                bytesRead = is.read(byteArray, current, (byteArray.length - current));
-                if (bytesRead >= 0) current += bytesRead;
-            } while (bytesRead > -1);
-            bos.write(byteArray, 0, current);
-            bos.flush();
-        } finally {
-            if (fos != null) fos.close();
-            if (bos != null) bos.close();
-        }
-    }
-
     public static void clearCommandQueue() {
-        //TODO: clear command queue
+        commandQueue.clear();
     }
 
     public static Command getNextCommand() {
-        return commandQueue.poll();
+        if (!commandQueue.isEmpty()) {
+            return commandQueue.poll();
+        } else if (!pendingQueue.isEmpty()) {
+            return pendingQueue.poll();
+        } else {
+            return null;
+        }
     }
 
     public static void handleNextCommand() {
@@ -210,7 +202,7 @@ public class NetworkManager {
             case ASSOCIATE:
                 break;
             case NEW_ENTRY:
-                //TODO: Entries
+                NetworkManager.getInstance().getFile(currentCommand);
                 break;
             case LINK_ENTRY:
                 break;
@@ -226,11 +218,6 @@ public class NetworkManager {
             case CHAT:
                 sendChatMessage(currentCommand);
                 break;
-            case NEW_FILE:
-                //TODO: file handling
-                break;
-            case NEW_ASSET:
-                break;
             case ADD_OWNER:
                 break;
             case REMOVE_OWNER:
@@ -243,7 +230,85 @@ public class NetworkManager {
                 break;
             case ERROR:
                 break;
+            case FILE_SERVER:
+                setFileServerPort(Integer.parseInt(currentCommand.get(0)));
+                break;
+            case PLAYER:
+                break;
+            case BEGIN_SYNC:
+                break;
+            case END_SYNC:
+                break;
         }
+    }
+
+    private static void changeTexture(Command currentCommand) {
+        //changeimage [token id] [new asset name]
+        File f = new File(currentCommand.get(1));
+        if (f.exists()) {
+            TableTopToken t = TableTopToken.getTokenMap().get(currentCommand.get(0));
+            if (t != null) {
+                t.changeTexture(currentCommand.get(1));
+            }
+        } else {
+            pendingQueue.add(currentCommand);
+        }
+
+    }
+
+    private static void handleNewConnect(Command command) {
+        //connect [display name] [id] [password hash] [message id]
+        //Get the player assigned to the socket
+        Socket playerSocket = command.getSocket();
+        Player curPlayer = getPlayerFromSocket(playerSocket);
+        if (curPlayer == null) return;
+        String displayName = command.get(0);
+        String id = command.get(1);
+        String passwordHash = command.get(2);
+        if (checkPassword(id, passwordHash)) {
+            curPlayer.setDisplayName(displayName);
+            curPlayer.setId(id);
+        }
+        //Create a new game state for that player
+        buildMap(curPlayer, MapManager.getPlayerCurrentMap(curPlayer));
+        //Update their chat log
+        sendChatLog(curPlayer);
+        //Make sure to create all the entries they have access to
+        sendEntries(curPlayer);
+
+        List<String> args = new LinkedList<>();
+        args.add(getFileServerPort() + "");
+        Command responseCommand = new Command(Command.CommandType.FILE_SERVER, args, command.getSocket());
+        sendCommand(responseCommand);
+    }
+
+    //  token [parent map id] [token id] [token X] [token Y] [layer] [image asset name] [file size] [message id]
+    // token test test 4 4 2 assets/badlogic.jpg 100 test
+    private static void newToken(Command currentCommand) {
+        Debug.println("Got message", currentCommand.toString());
+        TableTopMap parentMap = MapManager.getCurrentMap();//TableTopMap.getMapMap().get(currentCommand.get(0));
+        TableTopToken newToken = TableTopToken.getTokenMap().get(currentCommand.get(1));
+        //Check if map or token exists
+        if (parentMap == null || newToken != null) {
+            Debug.println("Cant create token", "");
+            //TODO: Send error message
+            return;
+        }
+        String tokenId = currentCommand.get(1);
+        float x = Float.parseFloat(currentCommand.get(2));
+        float y = Float.parseFloat(currentCommand.get(3));
+        int layer = Integer.parseInt(currentCommand.get(4));
+        String filePath = currentCommand.get(5);
+        Debug.println("Got Filepath", filePath);
+        //Check if the file exists
+        //Yes then use it for the image
+        //No, use the placeholder image, and place a change image command on the pending stack
+        filePath = NetworkManager.getInstance().newFile(currentCommand, filePath, Integer.parseInt(currentCommand.get(6)));
+        newToken = new TableTopToken(x, y, filePath, parentMap, layer, EngineManager.getCurrentPlayer(), tokenId);
+    }
+
+    public static List<Player> getPlayers() {
+        return Collections.list(sockets.keys());
     }
 
     private static void sendChatMessage(Command command) {
@@ -292,15 +357,6 @@ public class NetworkManager {
 
     }
 
-    private static Player getPlayerFromId(String s) {
-        for (Player p : getPlayers()) {
-            if (s.equals(p.getUserId())) {
-                return p;
-            }
-        }
-        return null;
-    }
-
     private static void moveAllMap(Command currentCommand) {
     }
 
@@ -315,38 +371,34 @@ public class NetworkManager {
         //TODO: Change light
     }
 
-    private static void changeTexture(Command currentCommand) {
-        //TODO: Change texture
+    public static boolean isHost() {
+        Debug.println("Host status", amHost + "");
+        return amHost;
     }
 
-    private static void handleNewConnect(Command command) {
-        //connect [display name] [id] [password hash] [message id]
-        //Get the player assigned to the socket
-        Socket playerSocket = command.getSocket();
-        Player curPlayer = getPlayerFromSocket(playerSocket);
-        if (curPlayer == null) return;
-        String displayName = command.get(0);
-        String id = command.get(1);
-        String passwordHash = command.get(2);
-        if (checkPassword(id, passwordHash)) {
-            curPlayer.setDisplayName(displayName);
-            curPlayer.setId(id);
+    public void startServer(int port) {
+        amHost = true;
+        serverHints = new ServerSocketHints();
+        serverHints.acceptTimeout = 0;
+        startFileServer();
+        while (true) {
+            Debug.println("Try to bind to port number", port + "");
+            try {
+                serverSocket = Gdx.net.newServerSocket(Protocol.TCP, port, serverHints);
+            } catch (Exception e) {
+                port++;
+                continue;
+            } finally {
+                ListenForPlayers listen = new ListenForPlayers();
+                listen.start();
+                break;
+            }
+
         }
-        //Create a new game state for that player
-        buildMap(curPlayer, MapManager.getPlayerCurrentMap(curPlayer));
-        //Update their chat log
-        sendChatLog(curPlayer);
-        //Make sure to create all the entries they have access to
-        sendEntries(curPlayer);
 
     }
 
-    private static Player getPlayerFromSocket(Socket sock) {
-        for (Map.Entry<Player, Socket> e : sockets.entrySet()) {
-            if (e.getValue().equals(sock)) return e.getKey();
-        }
-        return null;
-    }
+
 
     private static void sendEntries(Player curPlayer) {
         //TODO: Send the entries
@@ -370,26 +422,10 @@ public class NetworkManager {
         return true; //TODO: passwords
     }
 
-    //  token [parent map id] [token id] [token X] [token Y] [layer] [image asset name] [file size] [message id]
-    // token test test 4 4 2 assets/badlogic.jpg 100 test
-    private static void newToken(Command currentCommand) {
-        Debug.println("Got message", currentCommand.toString());
-        TableTopMap parentMap = MapManager.getCurrentMap();//TableTopMap.getMapMap().get(currentCommand.get(0));
-        TableTopToken newToken = TableTopToken.getTokenMap().get(currentCommand.get(1));
-        //Check if map or token exists
-        if (parentMap == null || newToken != null) {
-            Debug.println("Cant create token", "");
-            //TODO: Send error message
-            return;
-        }
-        String tokenId = currentCommand.get(1);
-        float x = Float.parseFloat(currentCommand.get(2));
-        float y = Float.parseFloat(currentCommand.get(3));
-        int layer = Integer.parseInt(currentCommand.get(4));
-        String filePath = currentCommand.get(5);
-        Debug.println("Got Filepath", filePath);
-        newFile(currentCommand, filePath, Integer.parseInt(currentCommand.get(6)));
-        newToken = new TableTopToken(x, y, filePath, parentMap, layer, EngineManager.getCurrentPlayer(), tokenId);
+    private void startFileServer() {
+        Debug.println("File Server", "Starting");
+        StartFileServer startFileServer = new StartFileServer();
+        startFileServer.start();
     }
 
     private static void moveToken(Command command) {
@@ -414,66 +450,6 @@ public class NetworkManager {
 
     }
 
-    public static List<Player> getPlayers() {
-        return Collections.list(sockets.keys());
-    }
-
-    public static boolean isHost() {
-        Debug.println("Host status", amHost + "");
-        return amHost;
-    }
-
-    public Socket getServer() {
-        return serverConnectTo;
-    }
-
-    public void startServer(int port) {
-        amHost = true;
-        serverHints = new ServerSocketHints();
-        serverHints.acceptTimeout = 0;
-        while (true) {
-            Debug.println("Try to bind to port number", port + "");
-            try {
-                serverSocket = Gdx.net.newServerSocket(Protocol.TCP, port, serverHints);
-            } catch (Exception e) {
-                port++;
-                continue;
-            } finally {
-                ListenForPlayers listen = new ListenForPlayers();
-                listen.start();
-                break;
-            }
-
-        }
-    }
-
-    private static void sendFile(Socket sock, String filepath) throws IOException {
-        FileInputStream fis;
-        BufferedInputStream bis = null;
-        OutputStream os = null;
-        try {
-            while (true) {
-
-                try {
-                    // send file
-                    File myFile = new File(filepath);
-                    byte[] byteArray = new byte[(int) myFile.length()];
-                    fis = new FileInputStream(myFile);
-                    bis = new BufferedInputStream(fis);
-                    bis.read(byteArray, 0, byteArray.length);
-                    os = sock.getOutputStream();
-                    os.write(byteArray, 0, byteArray.length);
-                    os.flush();
-                } finally {
-                    if (bis != null) bis.close();
-                    if (os != null) os.close();
-                }
-            }
-        } finally {
-
-        }
-    }
-
     private Command parseMessage(String message, Socket originSocket) {
         String[] messagecomponents = message.split("‗");
         LinkedList<String> messageList = new LinkedList<>();
@@ -492,6 +468,62 @@ public class NetworkManager {
         ListenForCommand commandListener = new ListenForCommand(clientSocket);
         commandListener.start(true);
     }
+
+    private String newFile(Command currentCommand, String filePath, int filesize) {
+        //  token [parent map id] [token id] [token X] [token Y] [layer] [image asset name] [file size] [message id]
+        //Check to see if we have a file with that name
+        /**/
+        File file = new File(filePath);
+        filePath += "(1)";
+        /*if (file.exists()) {
+            return filePath;
+        } else {TODO undo this*/
+        //Connect to the file server, and send the filepath
+        if (!isDownloading.contains(filePath)) {
+            String address = getServer().getRemoteAddress();
+            address = address.substring(1);
+            address = address.split(":")[0];
+            Socket downloadSocket = Gdx.net.newClientSocket(Protocol.TCP, address, NetworkManager.getFileServerPort(), null);
+            GetFile getFile = new GetFile(downloadSocket, Integer.parseInt(currentCommand.get(6)), currentCommand.get(5));
+            getFile.run();
+            isDownloading.add(currentCommand.get(5));
+        }
+        //Create pending change image command
+        List<String> args = new LinkedList<>();
+        //changeimage [token id] [new asset name]
+        args.add(currentCommand.get(1));
+        args.add(filePath);
+        Command cmd = new Command(Command.CommandType.CHANGE_IMAGE, args, null);
+        pendingQueue.add(cmd);
+        return PLACEHOLDER_FILEPATH;
+        /*}*/
+
+    }
+
+    private void getFile(Command currentCommand) {
+        //newasset [host] [port][file size] [file path] [file hash] [message id]
+
+        //We want to check if the file exists with that hash TODO
+        //If it does, cancel and send a cancel transfer
+        //If it doesn't connect to the host and download the file
+
+        Socket downloadSocket = Gdx.net.newClientSocket(Protocol.TCP, currentCommand.get(3), Integer.parseInt(currentCommand.get(4)), null);
+        GetFile getFile = new GetFile(downloadSocket, Integer.parseInt(currentCommand.get(2)), currentCommand.get(0));
+        getFile.start();
+
+    }
+
+    public Socket getServer() {
+        return serverConnectTo;
+    }
+
+
+    /**********************************************************************************************************************************************************************/
+    /**********************************************************************************************************************************************************************/
+    /**********************************************************************************************************************************************************************/
+    /**********************************************************************************************************************************************************************/
+    /**********************************************************************************************************************************************************************/
+
 
     private class ListenForPlayers implements Runnable {
         @Override
@@ -513,6 +545,10 @@ public class NetworkManager {
         }
     }
 
+
+    /**
+     * This thread listens for commands over the socket
+     */
     private class ListenForCommand implements Runnable {
         private Socket socket;
 
@@ -553,4 +589,192 @@ public class NetworkManager {
         }
     }
 
+    /**
+     * This thread acts as a file server.
+     */
+    private class StartFileServer implements Runnable {
+        ServerSocket fileServerSocket;
+
+        @Override
+        public void run() {
+            SocketHints hints = new SocketHints();
+            while (true) {
+                Debug.println("File Server", "Waiting for connection");
+                Socket playerSocket = fileServerSocket.accept(hints);
+                SendFile sendFile = new SendFile(playerSocket);
+                Debug.println("File Server", "Got connection, send file");
+                sendFile.start();
+            }
+
+        }
+
+        public void start() {
+            int port = 201;
+            while (true) {
+                Debug.println("File Server", "Try to bind to port number " + port + "");
+                try {
+                    fileServerSocket = Gdx.net.newServerSocket(Protocol.TCP, port, serverHints);
+                } catch (Exception e) {
+                    port++;
+                    continue;
+                } finally {
+                    Debug.println("File Server", "Bound");
+                    NetworkManager.setFileServerPort(port);
+                    Thread fileServerThread = new Thread(this, "FileServerThread");
+                    fileServerThread.start();
+                    break;
+                }
+
+            }
+        }
+    }
+
+    /**
+     * This thread sends files that are requested over the socket given.
+     */
+    private class SendFile implements Runnable {
+
+        private Socket sock;
+        private String filepath;
+
+        public SendFile(Socket sock) {
+
+            Debug.println("Upload", "Created upload object");
+            this.sock = sock;
+        }
+
+        private void sendFile() throws IOException {
+            try {
+                Debug.println("Uploading", "Starting");
+                File file = new File(filepath);
+                Debug.println("Uploading", "File has size of" + file.length());
+                byte[] byteArray = new byte[16 * 1024];
+
+                Debug.println("Uploading", "Make file stream");
+                InputStream in = new FileInputStream(file);
+                Debug.println("Uploading", "Make socket stream");
+                OutputStream out = sock.getOutputStream();
+                int count;
+                Debug.println("Uploading", "Begin sending");
+                while ((count = in.read(byteArray)) > 0) {
+                    out.write(byteArray, 0, count);
+                    Debug.println("Uploading", "Wrote line");
+                }
+                in.close();
+                out.close();
+                Debug.println("Uploading", "Closed streams");
+            } finally {
+                Debug.println("Uploading", "Finished");
+            }
+        }
+
+
+        @Override
+        public void run() {
+            try {
+                getPath();
+                if (validatePath()) sendFile();
+                else Debug.println("Uploading", "No valid filepath");
+            } catch (IOException e) {
+                Debug.println("Uploading", "Couldnt Upload");
+            }
+        }
+
+        private boolean validatePath() {
+            return true;
+        }
+
+        private void getPath() throws IOException {
+            Debug.println("Upload", "Waiting for path");
+            BufferedReader reader = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+            filepath = reader.readLine();
+            Debug.println("Upload", "Got file path, it is " + filepath);
+        }
+
+        public void start() {
+            Debug.println("Upload", "Open new thread");
+            Thread sendThread = new Thread(this, "SendFileThread" + UUID.randomUUID().toString());
+            sendThread.start();
+            Debug.println("Upload", "Thread started");
+        }
+    }
+
+
+    /**
+     * This class runs in a separate thread and downloads a file
+     */
+    private class GetFile implements Runnable {
+
+        private final Socket socket;
+        private final int fileSize;
+        private final File file;
+        private String path;
+
+        public GetFile(Socket downloadSocket, int fileSize, String filePath) {
+            this.socket = downloadSocket;
+            this.fileSize = fileSize;
+            this.file = new File(filePath + "(1)");
+            try {
+                Debug.println("Download", "Try to make new file with name " + filePath + "(1)");
+                file.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            this.path = filePath;
+
+        }
+
+        private void receiveFile() throws IOException {
+            int bytesRead;
+            int current;
+            FileOutputStream fos = null;
+            BufferedOutputStream bos = null;
+            try {
+                // receive file
+                Debug.println("Download", "Starting");
+                Debug.println("Download", "Size of file: " + fileSize + " bytes.");
+                byte[] byteArray = new byte[16 * 1024];
+                InputStream is = socket.getInputStream();
+                fos = new FileOutputStream(file);
+                bos = new BufferedOutputStream(fos);
+                //bytesRead = is.read(byteArray, 0, byteArray.length);
+                Debug.println("Download", "Got first bytes");
+                current = 0;
+                do {
+                    bytesRead = is.read(byteArray, current, (byteArray.length - current));
+                    Debug.println("Download", "Downloaded bytes");
+                    if (bytesRead >= 0) current += bytesRead;
+                } while (bytesRead > -1);
+                Debug.println("Download", "Download finished");
+                bos.write(byteArray, 0, current);
+                bos.flush();
+            } finally {
+                if (fos != null) fos.close();
+                if (bos != null) bos.close();
+            }
+        }
+
+
+        @Override
+        public void run() {
+            PrintWriter pn = new PrintWriter(socket.getOutputStream());
+            try {
+                Debug.println("Download", "Send path");
+                pn.println(path);
+                pn.flush();
+                Debug.println("Download", "Path sent");
+                path += "(1)";
+                receiveFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                pn.close();
+            }
+        }
+
+        public void start() {
+            Thread getThread = new Thread(this, "GetFileThread" + UUID.randomUUID().toString());
+            getThread.start();
+        }
+    }
 }

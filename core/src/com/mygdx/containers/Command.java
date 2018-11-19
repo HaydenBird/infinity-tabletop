@@ -72,6 +72,14 @@ public class Command {
                 return CommandType.REMOVE_MAP;
             case "removeentry":
                 return CommandType.REMOVE_ENTRY;
+            case "fileserver":
+                return CommandType.FILE_SERVER;
+            case "player":
+                return CommandType.PLAYER;
+            case "beginsync":
+                return CommandType.BEGIN_SYNC;
+            case "endsync":
+                return CommandType.END_SYNC;
             default:
                 return CommandType.ERROR;
         }
@@ -123,6 +131,14 @@ public class Command {
                 return "removeentry";
             case ERROR:
                 return "error";
+            case FILE_SERVER:
+                return "fileserver";
+            case PLAYER:
+                return "player";
+            case BEGIN_SYNC:
+                return "beginsync";
+            case END_SYNC:
+                return "endsyc";
         }
         return "error";
     }
@@ -149,7 +165,11 @@ public class Command {
         REMOVE_TOKEN,
         REMOVE_MAP,
         REMOVE_ENTRY,
-        ERROR
+        ERROR,
+        FILE_SERVER,
+        PLAYER,
+        BEGIN_SYNC,
+        END_SYNC
     }
 
     @Override

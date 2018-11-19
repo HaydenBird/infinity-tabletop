@@ -70,7 +70,6 @@ public class DragBox extends Image {
     private void setDragListener(float xMultiplier, float yMultiplier, float moveX, float moveY) {
         DragBox dragBox = this;
         List<TableTopToken> tokens = MapManager.getSelectedTokens();
-        Debug.println("Dragbox listener made", "");
         this.addListener(new DragListener() {
             @Override
             public void drag(InputEvent event, float x, float y, int pointer) {

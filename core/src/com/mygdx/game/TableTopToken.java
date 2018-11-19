@@ -21,6 +21,7 @@ import com.mygdx.tabletop.Entry;
 import com.mygdx.tabletop.Player;
 import sun.security.ssl.Debug;
 
+import java.io.File;
 import java.util.*;
 
 /**
@@ -128,7 +129,7 @@ public class TableTopToken extends Image {
         args.add(position.y + "");
         args.add(layer + "");
         args.add(texturePath + "");
-        args.add("0");
+        args.add(new File(texturePath).length() + "");
         args.add("MessageID");
         Command command = new Command(Command.CommandType.TOKEN, args, null);
         NetworkManager.sendCommand(command, NetworkManager.getPlayers());

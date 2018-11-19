@@ -8,8 +8,7 @@ import com.mygdx.managers.EngineManager;
 import com.mygdx.managers.MapManager;
 import sun.security.ssl.Debug;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.io.File;
 
 public class SelectImageAdapter extends FileChooserAdapter {
     private final int layer;
@@ -20,12 +19,9 @@ public class SelectImageAdapter extends FileChooserAdapter {
 
     @Override
     public void selected(Array<FileHandle> file) {
-
-        String pattern = ".*(assets\\/.*)";
-        Pattern p = Pattern.compile(pattern);
-        Matcher m = p.matcher(file.get(0).path());
-        m.find();
-        String path = m.group(1);
+        FileHandle fileHandle = file.get(0);
+        String path = "assets/" + fileHandle.name();
+        fileHandle.copyTo(new FileHandle(new File("assets/" + fileHandle.name())));
         TableTopToken newToken = new TableTopToken(MapManager.getMapStage().getCamera().position.x, MapManager.getMapStage().getCamera().position.y,
                 path, MapManager.getCurrentMap(), layer, EngineManager.getCurrentPlayer());
         MapManager.getCurrentMap().addToken(newToken, layer);

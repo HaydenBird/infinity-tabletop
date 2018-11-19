@@ -404,7 +404,11 @@ public class NetworkManager {
     }
 
     private static void propagateCommand(Command currentCommand) {
-        if (isHost()) sendCommand(currentCommand);
+        if (isHost()) {
+            List<Player> recipients = new LinkedList<>(getPlayers());
+            recipients.remove(getPlayerFromSocket(currentCommand.getSocket()));
+            sendCommand(currentCommand, recipients);
+        }
     }
 
     public static boolean isHost() {

@@ -20,8 +20,14 @@ public class SelectImageAdapter extends FileChooserAdapter {
     @Override
     public void selected(Array<FileHandle> file) {
         FileHandle fileHandle = file.get(0);
+        String[] pathParts = fileHandle.path().split("/");
         String path = "assets/" + fileHandle.name();
-        fileHandle.copyTo(new FileHandle(new File("assets/" + fileHandle.name())));
+        File assetFile = new File(path);
+        if (!assetFile.exists()) {
+            fileHandle.copyTo(new FileHandle(assetFile));
+        }
+        Debug.println("Select file", "folder is " + pathParts[pathParts.length - 1]);
+
         TableTopToken newToken = new TableTopToken(MapManager.getMapStage().getCamera().position.x, MapManager.getMapStage().getCamera().position.y,
                 path, MapManager.getCurrentMap(), layer, EngineManager.getCurrentPlayer());
         MapManager.getCurrentMap().addToken(newToken, layer);

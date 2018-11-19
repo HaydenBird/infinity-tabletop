@@ -89,8 +89,8 @@ public class NetworkManager {
     private static NetworkManager instance;
     private static boolean amHost;
     private static int fileServerPort;
+    private static boolean isOnline;
     private ServerSocketHints serverHints;
-    private Socket clientSocket;
     private Socket serverConnectTo;
     private List<String> isDownloading;
 
@@ -101,6 +101,7 @@ public class NetworkManager {
         pendingQueue = new ConcurrentLinkedQueue<>();
         isDownloading = new CopyOnWriteArrayList<>();
         amHost = false;
+        setIsOnline(false);
     }
 
     public static NetworkManager getInstance() {
@@ -130,29 +131,41 @@ public class NetworkManager {
         return fileServerPort;
     }
 
-    public static void setFileServerPort(int port) {
+    private static void setFileServerPort(int port) {
         fileServerPort = port;
     }
 
 
+    /**
+     * sends a command to the host
+     *
+     * @param command
+     */
     public static void sendCommand(Command command) {
+        if (!isIsOnline()) return;
         Debug.println("Sending message to host", command.toString());
-        if (command.getSocket() == null) return;
-        if (writers.get(command.getSocket()) == null) {
-            writers.put(command.getSocket(), new PrintWriter(command.getSocket().getOutputStream()));
+        if (isHost()) {
+            sendCommand(command, getPlayers()); //If we are the host, send to everyone
+        } else { //Otherwise send to the host
+            Socket toWriteTo = NetworkManager.getInstance().getServer();
+            if (writers.get(toWriteTo) == null) {
+                writers.put(toWriteTo, new PrintWriter(toWriteTo.getOutputStream()));
+            }
+            writers.get(toWriteTo).println(command.toString());
+            writers.get(toWriteTo).flush();
         }
-        writers.get(command.getSocket()).println(command.toString());
-        writers.get(command.getSocket()).flush();
     }
 
-    public static void sendCommand(Command command, List<Player> recipients) {
+    private static void sendCommand(Command command, List<Player> recipients) {
         if (!isHost()) { //If we arent the host send to the host
             return;
         }
         for (Player recipient : recipients) {
             Debug.println("Sending message to", recipient.getDisplayName());
             Socket playerSocket = sockets.get(recipient);
-
+            if (recipient == EngineManager.getCurrentPlayer()) {
+                Debug.println("Sending message to", recipient.getDisplayName() + "But they are the current player");
+            }
             if (writers.get(playerSocket) == null) {
                 writers.put(playerSocket, new PrintWriter(playerSocket.getOutputStream()));
             }
@@ -306,6 +319,7 @@ public class NetworkManager {
         //No, use the placeholder image, and place a change image command on the pending stack
         filePath = NetworkManager.getInstance().newFile(currentCommand, filePath, Integer.parseInt(currentCommand.get(6)));
         newToken = new TableTopToken(x, y, filePath, parentMap, layer, EngineManager.getCurrentPlayer(), tokenId);
+        propagateCommand(currentCommand);
     }
 
     public static List<Player> getPlayers() {
@@ -349,12 +363,7 @@ public class NetworkManager {
         ChatMessage chatMessage = new ChatMessage(messages, from, recipients, rollContainer, EngineManager.getSkin());
         UIManager.addChat(chatMessage);
 
-        //if we are the host, send it to all recipients
-        if (isHost()) {
-            List<Player> propagateRecipients = new LinkedList<>(recipients);
-            propagateRecipients.remove(EngineManager.getCurrentPlayer());
-            sendCommand(command, propagateRecipients);
-        }
+        propagateCommand(command);
 
     }
 
@@ -370,23 +379,32 @@ public class NetworkManager {
 
     private static void changeLight(Command currentCommand) {
         //TODO: Change light
-        //lightchange [token id] [light type] [light color] [light distance] [angle] [rotation] [active]
+        //lightchange [token id] [light type] [light color] [light distance] [angle] [rotation] [active] [shadow]
         TableTopToken token = TableTopToken.getTokenMap().get(currentCommand.get(0));
-        Color lightColor = new Color(Integer.parseInt(currentCommand.get(2)));
+        Color lightColor = Color.valueOf(currentCommand.get(2));
         float distance = Float.parseFloat(currentCommand.get(3));
         float angle = Float.parseFloat(currentCommand.get(4));
         float rotation = Float.parseFloat(currentCommand.get(5));
         boolean active = Boolean.parseBoolean(currentCommand.get(6));
         switch (currentCommand.get(1)) {
-            case "point":
-                token.enableOmniLight(lightColor, distance);
+            case "omni":
+                token.enableOmniLight(lightColor, distance, false);
                 if (!active) token.disableOmniLight();
                 break;
             case "cone":
-                token.enableConeLight(lightColor, distance, angle, rotation);
+                token.enableConeLight(lightColor, distance, angle, rotation, false);
                 if (!active) token.disableConeLight();
                 break;
         }
+        boolean shadows = Boolean.parseBoolean(currentCommand.get(7));
+        token.destroyBody();
+        if (shadows) token.createBody(MapManager.getCurrentMap().getWorld());
+
+        propagateCommand(currentCommand);
+    }
+
+    private static void propagateCommand(Command currentCommand) {
+        if (isHost()) sendCommand(currentCommand);
     }
 
     public static boolean isHost() {
@@ -394,26 +412,30 @@ public class NetworkManager {
         return amHost;
     }
 
-    public void startServer(int port) {
-        amHost = true;
-        serverHints = new ServerSocketHints();
-        serverHints.acceptTimeout = 0;
-        startFileServer();
-        while (true) {
-            Debug.println("Try to bind to port number", port + "");
-            try {
-                serverSocket = Gdx.net.newServerSocket(Protocol.TCP, port, serverHints);
-            } catch (Exception e) {
-                port++;
-                continue;
-            } finally {
-                ListenForPlayers listen = new ListenForPlayers();
-                listen.start();
-                break;
-            }
+    public static boolean isIsOnline() {
+        return isOnline;
+    }
 
-        }
+    public static void setIsOnline(boolean isOnline) {
+        NetworkManager.isOnline = isOnline;
+    }
 
+    private static void moveToken(Command command) {
+        TableTopToken token = TableTopToken.getTokenMap().get(command.get(0));
+        float x = Float.parseFloat(command.get(1));
+        float y = Float.parseFloat(command.get(2));
+        int layer = Integer.parseInt(command.get(3));
+        float width = Float.parseFloat(command.get(4));
+        float height = Float.parseFloat(command.get(5));
+        float rotation = Float.parseFloat(command.get(6));
+        token.setPosition(x, y);
+        token.setSize(width, height);
+        token.setLayer(layer);
+        token.updateLightPositions();
+        //TODO: handle rotation
+
+        //Now if you are the host, send the message to all players, the senders token is already in place but that's ok
+        propagateCommand(command);
     }
 
 
@@ -446,22 +468,27 @@ public class NetworkManager {
         startFileServer.start();
     }
 
-    private static void moveToken(Command command) {
-        TableTopToken token = TableTopToken.getTokenMap().get(command.get(0));
-        float x = Float.parseFloat(command.get(1));
-        float y = Float.parseFloat(command.get(2));
-        int layer = Integer.parseInt(command.get(3));
-        float width = Float.parseFloat(command.get(4));
-        float height = Float.parseFloat(command.get(5));
-        float rotation = Float.parseFloat(command.get(6));
-        token.setPosition(x, y);
-        token.setSize(width, height);
-        token.setLayer(layer);
-        token.updateLightPositions();
-        //TODO: handle rotation
+    public void startServer(int port) {
+        amHost = true;
+        NetworkManager.setIsOnline(true);
+        serverHints = new ServerSocketHints();
+        serverHints.acceptTimeout = 0;
+        startFileServer();
+        while (true) {
+            Debug.println("Try to bind to port number", port + "");
+            try {
+                serverSocket = Gdx.net.newServerSocket(Protocol.TCP, port, serverHints);
+            } catch (Exception e) {
+                port++;
+                continue;
+            } finally {
+                ListenForPlayers listen = new ListenForPlayers();
+                listen.start();
+                break;
+            }
 
-        //Now if you are the host, send the message to all players, the senders token is already in place but that's ok
-        if (isHost()) sendCommand(command, getPlayers());
+        }
+
     }
 
     private static void sendMessage(Socket socket, Command command) {
@@ -481,10 +508,11 @@ public class NetworkManager {
 
     public void connectToServer(String host, int port) {
         amHost = false;
-        clientSocket = Gdx.net.newClientSocket(Protocol.TCP, host, port, null);
+        Socket clientSocket = Gdx.net.newClientSocket(Protocol.TCP, host, port, null);
         serverConnectTo = clientSocket;
         ListenForCommand commandListener = new ListenForCommand(clientSocket);
         commandListener.start(true);
+        NetworkManager.setIsOnline(true);
     }
 
     private String newFile(Command currentCommand, String filePath, int filesize) {
@@ -773,18 +801,20 @@ public class NetworkManager {
 
         @Override
         public void run() {
-            PrintWriter pn = new PrintWriter(socket.getOutputStream());
             try {
-                Debug.println("Download", "Send path");
-                pn.println(path);
-                pn.flush();
-                Debug.println("Download", "Path sent");
-                path += "(1)";
-                receiveFile();
+                PrintWriter pn = new PrintWriter(socket.getOutputStream());
+                try {
+                    Debug.println("Download", "Send path");
+                    pn.println(path);
+                    pn.flush();
+                    Debug.println("Download", "Path sent");
+                    path += "(1)";
+                    receiveFile();
+                } finally {
+                    pn.close();
+                }
             } catch (IOException e) {
                 e.printStackTrace();
-            } finally {
-                pn.close();
             }
         }
 

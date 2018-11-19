@@ -33,12 +33,12 @@ public class RollManager {
         try {
             RollContainer rollResults = parseRollCommands(rollCommands);
             ChatMessage message = new ChatMessage(text, EngineManager.getCurrentPlayer(), null, rollResults, EngineManager.getSkin());
-            NetworkManager.sendCommand(message.getNetworkCommand(), NetworkManager.getPlayers());
+            NetworkManager.sendCommand(message.getNetworkCommand());
             return message;
         } catch (IncorrectFormattingError e) {
             Debug.println("Formatting error", "Debug");
             ChatMessage message = new ChatMessage(text, EngineManager.getCurrentPlayer(), null, EngineManager.getSkin());
-            NetworkManager.sendCommand(message.getNetworkCommand(), NetworkManager.getPlayers());
+            NetworkManager.sendCommand(message.getNetworkCommand());
             return message;
         }
 

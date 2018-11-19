@@ -22,7 +22,7 @@ public class AddOmniLightListener extends ChangeListener {
                     @Override
                     public void finished(String input) {
                         for (TableTopToken token : MapManager.getSelectedTokens()) {
-                            token.enableOmniLight(newColor, Float.parseFloat(input) * 110);
+                            token.enableOmniLight(newColor, Float.parseFloat(input) * 110, true);
                         }
 
                     }

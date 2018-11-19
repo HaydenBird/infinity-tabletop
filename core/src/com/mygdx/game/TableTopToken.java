@@ -47,6 +47,7 @@ public class TableTopToken extends Image {
     private PointLight selfLight;
 
     private static Map<String, TableTopToken> tokenMap;
+    private float coneLightDirection;
 
 
     /**
@@ -75,12 +76,13 @@ public class TableTopToken extends Image {
         this.setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
         setWidth(DEFAULT_WIDTH);
         setHeight(DEFAULT_HEIGHT);
-        this.setPosition(xPos, yPos);
+        this.setPositionNoUpdate(xPos, yPos);
         setLayer(layer);
         addClickListeners();
         tokenID = UUID.randomUUID().toString();
         TableTopToken.addToMap(this);
-        if (NetworkManager.isHost()) sendCreationMessage();
+        sendCreationMessage();
+        updateLightPositions();
     }
 
     /**
@@ -112,27 +114,20 @@ public class TableTopToken extends Image {
         this.setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
         setWidth(DEFAULT_WIDTH);
         setHeight(DEFAULT_HEIGHT);
-        this.setPosition(xPos, yPos);
+        this.setPositionNoUpdate(xPos, yPos);
         this.layer = layer;
         addClickListeners();
         this.tokenID = tokenID;
         TableTopToken.addToMap(this);
-        if (NetworkManager.isHost()) sendCreationMessage();
+        sendCreationMessage();
+        updateLightPositions();
     }
 
-    private void sendCreationMessage() {
-        //  token [parent map id] [token id] [token X] [token Y] [layer] [image asset name] [file size] [message id]
-        List<String> args = new LinkedList<>();
-        args.add(parentMap.getName() + "");
-        args.add(tokenID + "");
-        args.add(position.x + "");
-        args.add(position.y + "");
-        args.add(layer + "");
-        args.add(texturePath + "");
-        args.add(new File(texturePath).length() + "");
-        args.add("MessageID");
-        Command command = new Command(Command.CommandType.TOKEN, args, null);
-        NetworkManager.sendCommand(command, NetworkManager.getPlayers());
+    public static Map<String, TableTopToken> getTokenMap() {
+        if (tokenMap == null) {
+            tokenMap = new HashMap<>();
+        }
+        return tokenMap;
     }
 
     public static void addToMap(TableTopToken token) {
@@ -168,8 +163,19 @@ public class TableTopToken extends Image {
 
     private PointLight omniLight;
 
-    public static Map<String, TableTopToken> getTokenMap() {
-        return tokenMap;
+    private void sendCreationMessage() {
+        //  token [parent map id] [token id] [token X] [token Y] [layer] [image asset name] [file size] [message id]
+        List<String> args = new LinkedList<>();
+        args.add(parentMap.getName() + "");
+        args.add(tokenID + "");
+        args.add(position.x + "");
+        args.add(position.y + "");
+        args.add(layer + "");
+        args.add(texturePath + "");
+        args.add(new File(texturePath).length() + "");
+        args.add("MessageID");
+        Command command = new Command(Command.CommandType.TOKEN, args, null);
+        NetworkManager.sendCommand(command);
     }
     private boolean omnidirectionalLightOn = false, coneLightOn = false;
     private String texturePath;
@@ -184,16 +190,14 @@ public class TableTopToken extends Image {
     public void updateLightPositions() {
         if (omniLight != null) {
             omniLight.setPosition(position.x + width / 2, position.y + height / 2);
-            sendOLightCommand();
+
         }
         if (coneLight != null) {
             coneLight.setPosition(position.x + width / 2, position.y + height / 2);
-            sendCLightCommand();
         }
 
         if (body != null) {
             body.setTransform(position.x + width / 2, position.y + height / 2, 0);
-            sendBodyCommand();
         }
 
         if (selfLight != null) {
@@ -201,15 +205,20 @@ public class TableTopToken extends Image {
         }
     }
 
-    private void sendBodyCommand() {
 
-    }
-
-    private void sendCLightCommand() {
-
-    }
-
-    private void sendOLightCommand() {
+    public void sendLightCommand(String lightType, Color lightColor, float lightDistance, float lightAngle, float lightRotation, boolean lightActive) {
+        //lightchange [token id] [light type] [light color] [light distance] [angle] [rotation] [active] [shadows]
+        List<String> args = new LinkedList<>();
+        args.add(this.tokenID);
+        args.add(lightType);
+        args.add(lightColor.toString());
+        args.add(lightDistance + "");
+        args.add(lightAngle + "");
+        args.add(lightRotation + "");
+        args.add(lightActive + "");
+        args.add((body != null) + "");
+        Command cmd = new Command(Command.CommandType.LIGHT_CHANGE, args, null);
+        NetworkManager.sendCommand(cmd);
     }
 
     /**
@@ -231,7 +240,6 @@ public class TableTopToken extends Image {
         Fixture fixture = body.createFixture(fixtureDef);
         polygonShape.dispose();
         body.setUserData(this);
-
     }
 
     /**
@@ -240,7 +248,7 @@ public class TableTopToken extends Image {
      * @param color             the color of the light
      * @param omniLightDistance how far the light is cast
      */
-    public void enableOmniLight(Color color, float omniLightDistance) {
+    public void enableOmniLight(Color color, float omniLightDistance, boolean passOn) {
         if (omniLight == null) {
             omniLight = new PointLight(EngineManager.getRayHandler(null), 128, color, omniLightDistance, position.x + width / 2, position.y + height / 2);
         } else {
@@ -251,18 +259,21 @@ public class TableTopToken extends Image {
         omniLight.setActive(true);
         omniLight.setSoft(true);
         omnidirectionalLightOn = true;
+        if (passOn) sendLightCommand("omni", color, omniLightDistance, 0, 0, true);
     }
 
     public void disableOmniLight() {
         if (omniLight != null) {
             omniLight.setActive(false);
         }
+        sendLightCommand("omni", Color.BLACK, 0, 0, 0, false);
     }
 
     public void disableConeLight() {
         if (coneLight != null) {
             coneLight.setActive(false);
         }
+        sendLightCommand("cone", Color.BLACK, 0, 0, 0, false);
     }
     /**
      * This method overrides the normal draw method
@@ -305,6 +316,11 @@ public class TableTopToken extends Image {
         updateLightPositions();
     }
 
+    private void setPositionNoUpdate(float x, float y) {
+        super.setPosition(x, y);
+        this.position.set(x, y, 0);
+    }
+
     private void sendMovementMessage() {
         List<String> arguments = new LinkedList<>();
         arguments.add(tokenID + "");
@@ -316,12 +332,7 @@ public class TableTopToken extends Image {
         arguments.add(this.getRotation() + "");
         arguments.add("MessageID");
         Command command = new Command(Command.CommandType.MOVE, arguments, NetworkManager.getInstance().getServer());
-        if (NetworkManager.isHost()) {
-            NetworkManager.sendCommand(command, NetworkManager.getPlayers());
-        } else {
-            NetworkManager.sendCommand(command);
-        }
-
+        NetworkManager.sendCommand(command);
     }
 
 
@@ -409,11 +420,12 @@ public class TableTopToken extends Image {
         return owners.contains(EngineManager.getCurrentPlayer());
     }
 
-    public void enableConeLight(Color lightColor, float distance, float angle, float rotation) {
+    public void enableConeLight(Color lightColor, float distance, float angle, float rotation, boolean passOn) {
         if (coneLight == null) {
             coneLight = new ConeLight(EngineManager.getRayHandler(null), 128, lightColor, distance, position.x + width / 2, position.y + height / 2, rotation, angle);
         } else {
             coneLight.setDistance(distance);
+            coneLightDirection = rotation;
             coneLight.setColor(lightColor);
             coneLight.setDirection(rotation);
             coneLight.setConeDegree(angle);
@@ -422,6 +434,7 @@ public class TableTopToken extends Image {
         coneLight.setActive(true);
         coneLight.setSoft(true);
         coneLightOn = true;
+        if (passOn) sendLightCommand("cone", lightColor, distance, angle, rotation, true);
     }
 
     public boolean hasBody() {

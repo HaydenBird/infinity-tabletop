@@ -1,5 +1,6 @@
 package com.mygdx.listeners;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.mygdx.game.TableTopToken;
@@ -15,6 +16,7 @@ public class AddShadowsListener extends ChangeListener {
             } else {
                 token.destroyBody();
             }
+            token.sendLightCommand("shadows", Color.BLACK, 0, 0, 0, false);
         }
     }
 }

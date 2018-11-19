@@ -29,7 +29,7 @@ public class AddConeLightListener extends ChangeListener {
                                     @Override
                                     public void finished(String rotation) {
                                         for (TableTopToken token : MapManager.getSelectedTokens()) {
-                                            token.enableConeLight(newColor, Float.parseFloat(distance) * 110, Float.parseFloat(angle), Float.parseFloat(rotation));
+                                            token.enableConeLight(newColor, Float.parseFloat(distance) * 110, Float.parseFloat(angle), Float.parseFloat(rotation), true);
                                         }
                                     }
                                 });

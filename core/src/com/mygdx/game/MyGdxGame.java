@@ -4,7 +4,6 @@ import box2dLight.RayHandler;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -42,13 +41,6 @@ public class MyGdxGame extends Game {
         rayHandler = EngineManager.getRayHandler(world); //Initialize and set up the ray handler
         MapManager.setCurrentMap(MapManager.getCurrentMap());
         UIManager.setGame(this);
-        //Test tokens for the map
-        TableTopToken t = new TableTopToken(0, 0 / EngineManager.getRatio(), "assets/badlogic.jpg", MapManager.getCurrentMap(), TableTopMap.Layer.TOKEN, EngineManager.getCurrentPlayer());
-        TableTopToken t2 = new TableTopToken(200, 200 / EngineManager.getRatio(), "assets/badlogic.jpg", MapManager.getCurrentMap(), TableTopMap.Layer.BLOCKING, EngineManager.getCurrentPlayer());
-        TableTopToken t3 = new TableTopToken(200, 0 / EngineManager.getRatio(), "assets/badlogic.jpg", MapManager.getCurrentMap(), TableTopMap.Layer.MAP, EngineManager.getCurrentPlayer());
-        t2.enableOmniLight(Color.WHITE, 1000);
-        t.createBody(MapManager.getCurrentMap().getWorld());
-
         MapManager.getMapStage().addListener(new KeyListener(renderer)); //Add a listener for zooming
         inputMultiplexer.addProcessor(UIManager.getStage()); //Add all the things that need to have inputs handled to the multiplexer
         inputMultiplexer.addProcessor(MapManager.getMapStage());

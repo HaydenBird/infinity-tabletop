@@ -472,31 +472,29 @@ public class NetworkManager {
     private String newFile(Command currentCommand, String filePath, int filesize) {
         //  token [parent map id] [token id] [token X] [token Y] [layer] [image asset name] [file size] [message id]
         //Check to see if we have a file with that name
-        /**/
         File file = new File(filePath);
-        filePath += "(1)";
-        /*if (file.exists()) {
+        if (file.exists()) {
             return filePath;
-        } else {TODO undo this*/
-        //Connect to the file server, and send the filepath
-        if (!isDownloading.contains(filePath)) {
-            String address = getServer().getRemoteAddress();
-            address = address.substring(1);
-            address = address.split(":")[0];
-            Socket downloadSocket = Gdx.net.newClientSocket(Protocol.TCP, address, NetworkManager.getFileServerPort(), null);
-            GetFile getFile = new GetFile(downloadSocket, Integer.parseInt(currentCommand.get(6)), currentCommand.get(5));
-            getFile.run();
-            isDownloading.add(currentCommand.get(5));
+        } else {
+            //Connect to the file server, and send the filepath
+            if (!isDownloading.contains(filePath)) {
+                String address = getServer().getRemoteAddress();
+                address = address.substring(1);
+                address = address.split(":")[0];
+                Socket downloadSocket = Gdx.net.newClientSocket(Protocol.TCP, address, NetworkManager.getFileServerPort(), null);
+                GetFile getFile = new GetFile(downloadSocket, Integer.parseInt(currentCommand.get(6)), currentCommand.get(5));
+                getFile.run();
+                isDownloading.add(currentCommand.get(5));
+            }
+            //Create pending change image command
+            List<String> args = new LinkedList<>();
+            //changeimage [token id] [new asset name]
+            args.add(currentCommand.get(1));
+            args.add(filePath);
+            Command cmd = new Command(Command.CommandType.CHANGE_IMAGE, args, null);
+            pendingQueue.add(cmd);
+            return PLACEHOLDER_FILEPATH;
         }
-        //Create pending change image command
-        List<String> args = new LinkedList<>();
-        //changeimage [token id] [new asset name]
-        args.add(currentCommand.get(1));
-        args.add(filePath);
-        Command cmd = new Command(Command.CommandType.CHANGE_IMAGE, args, null);
-        pendingQueue.add(cmd);
-        return PLACEHOLDER_FILEPATH;
-        /*}*/
 
     }
 
@@ -713,9 +711,9 @@ public class NetworkManager {
         public GetFile(Socket downloadSocket, int fileSize, String filePath) {
             this.socket = downloadSocket;
             this.fileSize = fileSize;
-            this.file = new File(filePath + "(1)");
+            this.file = new File(filePath);
             try {
-                Debug.println("Download", "Try to make new file with name " + filePath + "(1)");
+                Debug.println("Download", "Try to make new file with name " + filePath);
                 file.createNewFile();
             } catch (IOException e) {
                 e.printStackTrace();

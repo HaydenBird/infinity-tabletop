@@ -2,6 +2,7 @@ package com.mygdx.containers;
 
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.mygdx.managers.EngineManager;
+import org.mariuszgromada.math.mxparser.Expression;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -37,11 +38,17 @@ public class RollContainer extends TextButton {
 
     public float getRollResult() {
         float initial = 0;
+        String expressionString = "";
         for (DicePool dicePool : rollResults) {
-            initial = Operator.performCalculation(dicePool.getOperator(), initial, dicePool.getTotal());
+            expressionString += dicePool.getOperator();
+            expressionString += " ";
+            expressionString += dicePool.getTotal() + " ";
         }
-        this.setText("" + initial);
-        return initial;
+        sun.security.ssl.Debug.println("Roll container", "Expression is: " + expressionString);
+        Expression expression = new Expression(expressionString);
+        double result = expression.calculate();
+        this.setText("" + result);
+        return (float) result;
 
     }
 }

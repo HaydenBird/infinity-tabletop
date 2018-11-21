@@ -75,7 +75,7 @@ public class DiceResult extends Label {
 
 
     private int roll(int sides) {
-        return random.nextInt(sides - 1) + 1;
+        return random.nextInt(sides) + 1;
 
     }
 

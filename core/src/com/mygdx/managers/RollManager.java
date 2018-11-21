@@ -109,11 +109,11 @@ public class RollManager {
                 rollCommand = rollCommand.substring(1, rollCommand.length() - 1);
                 Debug.println("Parse roll command", "Stripped Roll command: " + rollCommand);
                 //Build the regex
-                Pattern rollPartPattern = Pattern.compile("([\\/\\+\\-\\*]?)\\s*(\\d+|\\([^\\(\\)]*\\)\\b)d(\\b\\([^\\(\\)]*\\)|[^\\/\\+\\*\\-]*)");
+                Pattern rollPartPattern = Pattern.compile("([\\/\\+\\-\\*]?)\\s*(\\d+|\\([^\\(\\)]*\\)\\b)d?(\\b\\([^\\(\\)]*\\)|[^\\/\\+\\*\\-\\(\\)]*)");
                 Matcher rollPartMatcher = rollPartPattern.matcher(rollCommand);
                 //Search and find all groupings of dice and what operation they are performing ( + - * /)
                 while (rollPartMatcher.find()) { //For each grouping
-                    if (rollPartMatcher.group(2).isEmpty()) {
+                    if (rollPartMatcher.group(2) == null) {
                         Debug.println("Parse roll command", "Matcher found nothing");
                         continue;
                     }
@@ -129,14 +129,24 @@ public class RollManager {
                     //Find the dice number and size
                     String[] parameters = rollPartMatcher.group(3).split("_");
                     parameters = Arrays.copyOfRange(parameters, 1, parameters.length);
-                    Debug.println("Parse roll command", "dice number: " + rollPartMatcher.group(2) + ", size: " + rollPartMatcher.group(3));
-                    int diceNumber = (int) (doMath(rollPartMatcher.group(2)));
-                    int diceSize = (int) (doMath(rollPartMatcher.group(3)));
-                    //find all the parameters
-                    Debug.println("Parse roll command", "Parameter count: " + parameters.length);
-                    RollArguments rollArguments = findArguments(parameters);
-                    dicePool.addDice(diceNumber, diceSize, rollArguments, flagsMet);
-                    flagsMet.addAll(rollArguments.calculateConditions(dicePool));
+                    if (rollPartMatcher.group(3) == null) {
+                        if (rollPartMatcher.group(2) != null) {
+                            dicePool.addMod((float) doMath(rollPartMatcher.group(2)));
+                        } else {
+                            continue;
+                        }
+                    } else {
+
+                        Debug.println("Parse roll command", "dice number: " + rollPartMatcher.group(2) + ", size: " + rollPartMatcher.group(3));
+                        int diceNumber = (int) (doMath((!rollPartMatcher.group(2).trim().isEmpty()) ? rollPartMatcher.group(2) : "1"));
+                        int diceSize = (int) (doMath((!rollPartMatcher.group(3).trim().isEmpty()) ? rollPartMatcher.group(3) : "1"));
+                        //find all the parameters
+                        Debug.println("Parse roll command", "Parameter count: " + parameters.length);
+                        RollArguments rollArguments = findArguments(parameters);
+                        dicePool.addDice(diceNumber, diceSize, rollArguments, flagsMet);
+                        flagsMet.addAll(rollArguments.calculateConditions(dicePool));
+                    }
+
 
                     //Do something with the dice pool
                     container.addDicePool(dicePool);
@@ -156,7 +166,7 @@ public class RollManager {
 
     private double doMath(String equation) {
         Expression ex = new Expression(equation);
-        Debug.println("Math expression", ex.calculate() + "");
+        Debug.println("Math expression", "Got string :" + equation + " calculated:" + ex.calculate() + "");
         return ex.calculate();
     }
 

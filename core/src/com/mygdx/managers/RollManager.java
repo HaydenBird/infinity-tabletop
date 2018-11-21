@@ -1,6 +1,7 @@
 package com.mygdx.managers;
 
 import com.mygdx.containers.*;
+import org.mariuszgromada.math.mxparser.Expression;
 import sun.security.ssl.Debug;
 
 import java.util.Arrays;
@@ -108,7 +109,7 @@ public class RollManager {
                 rollCommand = rollCommand.substring(1, rollCommand.length() - 1);
                 Debug.println("Parse roll command", "Stripped Roll command: " + rollCommand);
                 //Build the regex
-                Pattern rollPartPattern = Pattern.compile("([*/+-])?([^*/+-]*)");
+                Pattern rollPartPattern = Pattern.compile("([\\/\\+\\-\\*]?)\\s*(\\d+|\\([^\\(\\)]*\\)\\b)d(\\b\\([^\\(\\)]*\\)|[^\\/\\+\\*\\-]*)");
                 Matcher rollPartMatcher = rollPartPattern.matcher(rollCommand);
                 //Search and find all groupings of dice and what operation they are performing ( + - * /)
                 while (rollPartMatcher.find()) { //For each grouping
@@ -126,18 +127,16 @@ public class RollManager {
                         dicePool.setOperator(operator);
                     }
                     //Find the dice number and size
-                    String[] diceValues = rollPartMatcher.group(2).split("_")[0].split("d");
-                    Debug.println("Parse roll command", "dice number: " + diceValues[0] + ", size: " + diceValues[1]);
-                    int diceNumber = Integer.parseInt(diceValues[0]);
-                    int diceSize = Integer.parseInt(diceValues[1]);
-                    //find all the parameters
-                    String[] parameters = rollPartMatcher.group(2).split("_");
+                    String[] parameters = rollPartMatcher.group(3).split("_");
                     parameters = Arrays.copyOfRange(parameters, 1, parameters.length);
+                    Debug.println("Parse roll command", "dice number: " + rollPartMatcher.group(2) + ", size: " + rollPartMatcher.group(3));
+                    int diceNumber = (int) (doMath(rollPartMatcher.group(2)));
+                    int diceSize = (int) (doMath(rollPartMatcher.group(3)));
+                    //find all the parameters
                     Debug.println("Parse roll command", "Parameter count: " + parameters.length);
                     RollArguments rollArguments = findArguments(parameters);
                     dicePool.addDice(diceNumber, diceSize, rollArguments, flagsMet);
                     flagsMet.addAll(rollArguments.calculateConditions(dicePool));
-
 
                     //Do something with the dice pool
                     container.addDicePool(dicePool);
@@ -153,6 +152,12 @@ public class RollManager {
             e.printStackTrace();
             throw new IncorrectFormattingError();
         }
+    }
+
+    private double doMath(String equation) {
+        Expression ex = new Expression(equation);
+        Debug.println("Math expression", ex.calculate() + "");
+        return ex.calculate();
     }
 
     private RollArguments findArguments(String[] listArguments) {

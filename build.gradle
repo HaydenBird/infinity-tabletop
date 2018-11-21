@@ -67,6 +67,8 @@ project(":html") {
         compile "com.badlogicgames.gdx:gdx-box2d-gwt:$gdxVersion:sources"
         compile "com.badlogicgames.box2dlights:box2dlights:$box2DLightsVersion:sources"
         compile "com.kotcrab.vis:vis-ui:$visuiVersion:sources"
+
+
     }
 }
 
@@ -81,7 +83,10 @@ project(":core") {
         compile "com.badlogicgames.box2dlights:box2dlights:$box2DLightsVersion"
         testCompile "junit:junit:4.12"
         compile "com.kotcrab.vis:vis-ui:$visuiVersion"
-        
+        // https://mvnrepository.com/artifact/org.mariuszgromada.math/MathParser.org-mXparser
+        compile group: 'org.mariuszgromada.math', name: 'MathParser.org-mXparser', version: '4.2.0'
+
+
     }
 }
 

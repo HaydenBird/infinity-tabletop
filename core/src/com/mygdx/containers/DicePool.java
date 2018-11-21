@@ -119,6 +119,7 @@ public class DicePool extends TextButton {
         for (DiceResult die : dice) {
             result += die.getFinalResult();
         }
+        this.setText(result + "");
     }
 
     /**

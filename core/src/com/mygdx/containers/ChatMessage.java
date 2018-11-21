@@ -39,17 +39,18 @@ public class ChatMessage extends Table {
         this.padRight(25);
         this.addListener(new TextTooltip(timeStamp.toString(), EngineManager.getSkin())); //Create the tooltip
         this.group = new HorizontalGroup();
-        String labelText = "";
         for (MessageComponent component : components) {
             if (component.getStringOrContainer() == RollContainer.class) {
-                labelText += ((RollContainer) component.getMessageComponent()).getRollResult();
+                group.addActor((RollContainer) component.getMessageComponent());
+                ((RollContainer) component.getMessageComponent()).getRollResult();
             } else {
-                labelText += (String) component.getMessageComponent();
+                Label label = new Label((String) component.getMessageComponent(), EngineManager.getSkin());
+                group.addActor(label);
             }
         }
-        Label label = new Label(labelText, EngineManager.getSkin());
-        group.addActor(label);
-        group.wrap();
+
+
+        //group.wrap();
         this.add(new Label("From: " + sender.getDisplayName(), EngineManager.getSkin()));
         this.row();
         this.add(group);
@@ -59,35 +60,7 @@ public class ChatMessage extends Table {
     public Command getNetworkCommand() {
         //chat [number of messages] [number of rolls] [message 1] ... [message n] [roll 1] ... [rolls n] [style] [from] [number of recipients] [recipient id 1] .. [recipient id 2] [message id]
         List<String> args = new LinkedList<>();
-        args.add(message.size() + "");
-        args.add(rolls.getRollResults().size() + "");
-        for (String s : message) {
-            args.add(s);
-        }
-        for (DicePool dp : rolls.getRollResults()) {
-            String diceResultString = "";
-            for (DiceResult dr : dp.getDice()) {
-                //[hover string]--[final result]]@[result 2]...@[result n]
-
-                diceResultString += dr.getHistory();
-                diceResultString += "--";
-                diceResultString += dr.getFinalResult();
-                diceResultString += "@";
-
-            }
-            diceResultString += dp.getMod() + "";
-            args.add(diceResultString);
-        }
-        //Style
-        args.add("STYLEPLACEHOLDER");
-        //from
-        args.add(sender.getUserId());
-        //number of recipients
-        args.add(recipients.size() + "");
-        //Recipient ids
-        for (Player p : recipients) {
-            args.add(p.getUserId());
-        }
+        //TODO chat network commands
         Command command = new Command(Command.CommandType.CHAT, args, null);
         return command;
 

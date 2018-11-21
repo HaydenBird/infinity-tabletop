@@ -31,14 +31,13 @@ public class RollManager {
         }
         List<String> text = new LinkedList<>(Arrays.asList(newMessage.split("\\[[^\\]\\[]+\\]")));
         try {
-            RollContainer rollResults = parseRollCommands(rollCommands);
-            ChatMessage message = new ChatMessage(text, EngineManager.getCurrentPlayer(), null, rollResults, EngineManager.getSkin());
-            NetworkManager.sendCommand(message.getNetworkCommand());
+            ChatMessage message = parseRollCommands(rollCommands);
+            //NetworkManager.sendCommand(message.getNetworkCommand());
             return message;
         } catch (IncorrectFormattingError e) {
             Debug.println("Formatting error", "Debug");
             ChatMessage message = new ChatMessage(text, EngineManager.getCurrentPlayer(), null, EngineManager.getSkin());
-            NetworkManager.sendCommand(message.getNetworkCommand());
+            //NetworkManager.sendCommand(message.getNetworkCommand());
             return message;
         }
 
@@ -46,134 +45,163 @@ public class RollManager {
 
     /**
      * Roll commands come in the following forms:
-     * [number of dice]d[sides of dice]+modifier
+     * [number of dice 1]d[sides of dice 1]_[parameter 1]_..._[parameter n]+...+[number of dice n]d[dice size n]+modifier
      * <p>
-     * Modifiers:
+     * Parameters:
      * <p>
-     * -a -   advantage
-     * -d -   disadvantage
+     * _a -   advantage
+     * _d -   disadvantage
      * Adv and disadv cancel eachother out
      * <p>
-     * -rer [< or > or =] x   -   reroll any number greater than or less than or equal to x once
-     * -rep [< or > or =] x y    - replace all rolls greater than or less than or equal to X with Y
+     * _dl:x    drop the lowest x dice, if x is greater than the number of dice, then all will be dropped
+     * _dh:x    drop the highest x dice
+     * _kl:x    keep the lowest x dice
+     * _kh:x    keep the highest x dice
      * <p>
-     * -crit x   -   any number above x is a crit     *
+     * _rer:[< or > or =]:x   -   reroll any number greater than or less than or equal to x once
+     * _rep:[< or > or =]:x:y    - replace all rolls greater than or less than or equal to X with Y
+     * <p>
+     * _success:[< or > or =]:x   - count each dice that is in the range
+     * _condition:[condition]:value:flagname   -   if a conditiion is met, set the flag named
+     *<p>
+     *  Conditions:
+     *          total:[=, >, <]:[value]
+     *          highestDice:[=, >, <]:[value]
+     *          lowestDice:[=, >, <]:[value]
+     *          numberSuccesses:[=, >, <]:[value]   -   successes is always 0 if the roll does not flag it
+     *          alldice:[=, >, <]:[value]
+     *<p>
+     * -if:flagname     -   only perform this command if the named flag is flagged
      *
      * @param rollCommands the split list of commands in braces
      * @return the roll container that has the rolls for the message
      * @throws IncorrectFormattingError This error means the formatting of a roll command was wrong
      */
-    private RollContainer parseRollCommands(List<String> rollCommands) throws IncorrectFormattingError {
-        Pattern dicePattern = Pattern.compile("(\\d+)d(\\d+)"); //Finds the number and size of the dice
-        Pattern modPattern = Pattern.compile("\\d+d\\d+\\+(\\d*\\.?\\d*)"); //Finds the modifier of the dice
-        Pattern commandPattern = Pattern.compile("-[^-]+"); //Finds the roll parameters
-        List<DicePool> diceResults = new LinkedList<>();
-        for (String command : rollCommands) { //For each command
-            command = command.replaceAll("\\[", "").replaceAll("\\]", ""); //Strip the unneeded symbols
-            diceResults.add(new DicePool());
-            List<Integer> diceNumber = new LinkedList<>();
-            List<Integer> diceSize = new LinkedList<>();
-            Matcher diceMatcher = dicePattern.matcher(command);
-            Matcher argumentMatcher = commandPattern.matcher(command);
-            Matcher modMatcher = modPattern.matcher(command);
-            RollArguments rollArguments = new RollArguments();
-            //Check for dice properties
-            try {
-                //Find the dice
-                addDice(diceMatcher, diceSize, diceNumber);
-                //Check for modifier
-                float mod = findDiceModifier(modMatcher);
-                //Check for arguments
-                findArguments(rollArguments, argumentMatcher, command);
-                //Roll the dice
-                createDice(diceNumber, diceSize, rollArguments.getAdvantage(), rollArguments.getReroll(), rollArguments.getRerollTrigger(),
-                        rollArguments.getReplace(), rollArguments.getReplaceValue(), rollArguments.getReplaceTrigger(), diceResults);
-                diceResults.get(diceResults.size() - 1).addMod(mod);
-            } catch (Exception e) {
-                Debug.println(e.getClass().getName(), "Debug");
-                throw new IncorrectFormattingError();
+    private ChatMessage parseRollCommands(List<String> rollCommands) throws IncorrectFormattingError {
+        try {
+            List<RollContainer> rollContainers = new LinkedList<>();
+            List<String> flagsMet = new LinkedList<>();
+            for (String rollCommand : rollCommands) {
+                Debug.println("Parse roll command", "Roll command: " + rollCommand);
+                RollContainer container = new RollContainer();
+                rollCommand = rollCommand.substring(1, rollCommand.length() - 1);
+                Debug.println("Parse roll command", "Stripped Roll command: " + rollCommand);
+                //Build the regex
+                Pattern rollPartPattern = Pattern.compile("([*/+-])?([^*/+-]*)");
+                Matcher rollPartMatcher = rollPartPattern.matcher(rollCommand);
+                //Search and find all groupings of dice and what operation they are performing ( + - * /)
+                while (rollPartMatcher.find()) { //For each grouping
+                    if (rollPartMatcher.group(2).isEmpty()) {
+                        Debug.println("Parse roll command", "Matcher found nothing");
+                        continue;
+                    }
+                    Debug.println("Parse roll command", "Regex match, group 1: " + rollPartMatcher.group(1) + ", group 2: " + rollPartMatcher.group(2));
+                    DicePool dicePool = new DicePool();
+                    //Find the operator
+                    String operator = rollPartMatcher.group(1);
+                    if ((operator == null)) {
+                        dicePool.setOperator("+");
+                    } else {
+                        dicePool.setOperator(operator);
+                    }
+                    //Find the dice number and size
+                    String[] diceValues = rollPartMatcher.group(2).split("_")[0].split("d");
+                    Debug.println("Parse roll command", "dice number: " + diceValues[0] + ", size: " + diceValues[1]);
+                    int diceNumber = Integer.parseInt(diceValues[0]);
+                    int diceSize = Integer.parseInt(diceValues[1]);
+                    //find all the parameters
+                    String[] parameters = rollPartMatcher.group(2).split("_");
+                    parameters = Arrays.copyOfRange(parameters, 1, parameters.length);
+                    Debug.println("Parse roll command", "Parameter count: " + parameters.length);
+                    RollArguments rollArguments = findArguments(parameters);
+                    dicePool.addDice(diceNumber, diceSize, rollArguments, flagsMet);
+                    flagsMet.addAll(rollArguments.calculateConditions(dicePool));
+
+
+                    //Do something with the dice pool
+                    container.addDicePool(dicePool);
+
+                }
+                rollContainers.add(container);
             }
-        }
-        return new RollContainer(diceResults, rollCommands);
-    }
 
-    /**
-     * This method matches for dice size and number
-     *
-     * @param diceMatcher the matcher
-     * @param diceSize    the list used to store the sizes of the dice
-     * @param diceNumber  the list used to store the number of dice
-     */
-    private void addDice(Matcher diceMatcher, List<Integer> diceSize, List<Integer> diceNumber) {
-        while (diceMatcher.find()) {
-            diceNumber.add(Integer.parseInt(diceMatcher.group(1)));
-            diceSize.add(Integer.parseInt(diceMatcher.group(2)));
+
+            //Create  a chat message out of the containers
+            return null;
+        } catch (Exception e) {
+            throw new IncorrectFormattingError();
         }
     }
 
-    /**
-     * This method finds the total modifier for a roll
-     *
-     * @param modMatcher the matcher
-     * @return the total modifier
-     */
-    private float findDiceModifier(Matcher modMatcher) {
-        float diceModifier = 0;
-        while (modMatcher.find()) diceModifier += Float.parseFloat(modMatcher.group(1));
-        return diceModifier;
+    private RollArguments findArguments(String[] listArguments) {
+        RollArguments rollArguments = new RollArguments();
+        for (String parameter : listArguments) {
+            handleParameter(rollArguments, parameter);
+        }
+        return rollArguments;
     }
 
-    /**
-     * This method rolls the dice and adds them to the list
-     *
-     * @param diceNumber     the list of how many dice for each roll
-     * @param diceSize       what size those dice are
-     * @param advantage      whether the dice have advantage
-     * @param reroll         whether the dice need to reroll
-     * @param rerollTrigger  what triggers the reroll
-     * @param replace        whether the dice are replaced
-     * @param replaceValue   what to replace with
-     * @param replaceTrigger what triggers the replace
-     * @param diceResults    the list tostore the results
-     */
-    private void createDice(List<Integer> diceNumber, List<Integer> diceSize, int advantage, int reroll, String rerollTrigger, int replace, int replaceValue, String replaceTrigger, List<DicePool> diceResults) {
-        //Roll the dice
-        for (int i = 0; (i < diceNumber.size()) && (i < diceSize.size()); i++) {
-            for (int j = 0; j < diceNumber.get(i); j++) {
-                DiceResult newDice = new DiceResult(diceSize.get(i), advantage, rerollTrigger, reroll, replaceTrigger, replace, replaceValue);
-                diceResults.get(diceResults.size() - 1).addDice(newDice);
-            }
+    private void handleParameter(RollArguments rollArguments, String parameter) {
+        String[] parameterParts = parameter.split(":");
+        switch (parameterParts[0]) {
+            //Advantage cases
+            case "a":
+                rollArguments.setAdvantage(rollArguments.getAdvantage() + 1);
+                Debug.println("Parse roll command", "Advantage");
+                break;
+            case "d":
+                rollArguments.setAdvantage(rollArguments.getAdvantage() - 1);
+                Debug.println("Parse roll command", "Disadvantage");
+                break;
+            //Reroll Case
+            case "rer":
+                rollArguments.setRerollTrigger(Operator.fromString(parameterParts[1]));
+                rollArguments.setRerollThreshold(Integer.parseInt(parameterParts[2]));
+                Debug.println("Parse roll command", "Reroll " + parameterParts[1] + " " + parameterParts[2]);
+                break;
+            //Replace case
+            case "rep":
+                rollArguments.setReplaceTrigger(Operator.fromString(parameterParts[1]));
+                rollArguments.setReplaceThreshold(Integer.parseInt(parameterParts[2]));
+                rollArguments.setReplaceValue(Integer.parseInt(parameterParts[2]));
+                Debug.println("Parse roll command", "Replace all dice " + parameterParts[1] + " " + parameterParts[2] + " with " + parameterParts[3]);
+                break;
+            //successes case
+            case "success":
+                rollArguments.setSuccessTrigger(Operator.fromString(parameterParts[1]));
+                rollArguments.setSuccessValue(Integer.parseInt(parameterParts[2]));
+                Debug.println("Parse roll command", "Success on " + parameterParts[1] + " " + parameterParts[2]);
+                break;
+            //condition casea
+            case "condition":
+                Condition newCondition = new Condition(Condition.typeFromString(parameterParts[1]), Operator.fromString(parameterParts[2]),
+                        parameterParts[3], Float.parseFloat(parameterParts[4]));
+                rollArguments.getConditions().add(newCondition);
+                Debug.println("Parse roll command", "A condition has been set, if " + parameterParts[1] + " is " + parameterParts[2]
+                        + " " + parameterParts[3] + "then set flag" + parameterParts[4]);
+                break;
+            //if case
+            case "if":
+                rollArguments.setAddIfFlagName(parameterParts[1]);
+                Debug.println("Parse roll command", "If flag " + parameterParts[1]);
+                break;
+            //Keep lowest
+            case "kl":
+                rollArguments.setKeepLowest(Integer.parseInt(parameterParts[1]));
+                break;
+            //Drop lowest
+            case "dl":
+                rollArguments.setDropLowest(Integer.parseInt(parameterParts[1]));
+                break;
+            //Keep highest
+            case "kh":
+                rollArguments.setKeepHighest(Integer.parseInt(parameterParts[1]));
+                break;
+            //Drop highest
+            case "dh":
+                rollArguments.setDropHighest(Integer.parseInt(parameterParts[1]));
+                break;
         }
     }
 
-    /**
-     * This method finds the parameters of the commands
-     *
-     * @param rollArguments   the container to store the parameters
-     * @param argumentMatcher the matcher
-     * @param command         the command that is being checked
-     */
-    private void findArguments(RollArguments rollArguments, Matcher argumentMatcher, String command) {
-        while (argumentMatcher.find()) {
-            String[] arguments = argumentMatcher.group(0).split("\\s");
-            List<String> argList = Arrays.asList(arguments);
-            switch (argList.get(0)) {
-                case "-a":
-                    rollArguments.plusAdvantage();
-                    break;
-                case "-d":
-                    rollArguments.subAdvantage();
-                    break;
-                case "-rer":
-                    rollArguments.setRerollTrigger(argList.get(1));
-                    rollArguments.setReroll(Integer.parseInt(argList.get(2)));
-                    break;
-                case "-rep":
-                    rollArguments.setReplaceTrigger(argList.get(1));
-                    rollArguments.setReplace(Integer.parseInt(argList.get(2)));
-                    rollArguments.setReplaceValue(Integer.parseInt(argList.get(3)));
-                    break;
-            }
-        }
-    }
 }

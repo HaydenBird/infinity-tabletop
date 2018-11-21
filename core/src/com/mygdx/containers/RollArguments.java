@@ -1,121 +1,159 @@
 package com.mygdx.containers;
 
+import java.util.LinkedList;
+import java.util.List;
+
 /**
  * This object stores the parameters for a dice roll
  */
 public class RollArguments {
-    int reroll;
-    int replace;
-    int replaceValue;
-    int advantage;
+    private int advantage;
 
-    /**
-     * This returns the reroll threshhold
-     *
-     * @return the reroll threshold
-     */
-    public int getReroll() {
-        return reroll;
+    private int rerollThreshold;
+    private Operator rerollTrigger;
+
+    private int replaceValue;
+    private int replaceThreshold;
+    private Operator replaceTrigger;
+
+    private List<String> ifFlagName;
+
+    private Operator successTrigger;
+    private int successValue;
+
+    private int keepHighest;
+    private int keepLowest;
+
+    private int dropHighest;
+    private int dropLowest;
+
+
+    private List<Condition> conditions;
+
+    public RollArguments() {
+        conditions = new LinkedList<>();
+        ifFlagName = new LinkedList<>();
+        rerollThreshold = -1;
+        replaceThreshold = -1;
     }
 
-    /**
-     * This sets the reroll threshold
-     *
-     * @param reroll the new threshold
-     */
-    public void setReroll(int reroll) {
-        this.reroll = reroll;
-    }
 
-    /**
-     * @return the replace threshold
-     */
-    public int getReplace() {
-        return replace;
-    }
-
-    /**
-     * @param replace the new replace threshold
-     */
-    public void setReplace(int replace) {
-        this.replace = replace;
-    }
-
-    /**
-     * @return the replace value
-     */
-    public int getReplaceValue() {
-        return replaceValue;
-    }
-
-    /**
-     * @return the replace value
-     */
-    public void setReplaceValue(int replaceValue) {
-        this.replaceValue = replaceValue;
-    }
-
-    /**
-     * @return whether it has advantage
-     */
     public int getAdvantage() {
         return advantage;
     }
 
-    /**
-     * increments advantage
-     */
-    public void plusAdvantage() {
-        this.advantage = this.advantage + 1;
+    public void setAdvantage(int advantage) {
+        this.advantage = advantage;
     }
 
-    /**
-     * decrements advantage
-     */
-    public void subAdvantage() {
-        this.advantage = this.advantage - 1;
+    public int getRerollThreshold() {
+        return rerollThreshold;
     }
 
-    /**
-     * @return the reroll trigger
-     */
-    public String getRerollTrigger() {
+    public void setRerollThreshold(int rerollThreshold) {
+        this.rerollThreshold = rerollThreshold;
+    }
+
+    public Operator getRerollTrigger() {
         return rerollTrigger;
     }
 
-    /**
-     * @param rerollTrigger the reroll trigger
-     */
-    public void setRerollTrigger(String rerollTrigger) {
+    public void setRerollTrigger(Operator rerollTrigger) {
         this.rerollTrigger = rerollTrigger;
     }
 
-    /**
-     * @return the replace trigger
-     */
-    public String getReplaceTrigger() {
+    public int getReplaceValue() {
+        return replaceValue;
+    }
+
+    public void setReplaceValue(int replaceValue) {
+        this.replaceValue = replaceValue;
+    }
+
+    public int getReplaceThreshold() {
+        return replaceThreshold;
+    }
+
+    public void setReplaceThreshold(int replaceThreshold) {
+        this.replaceThreshold = replaceThreshold;
+    }
+
+    public Operator getReplaceTrigger() {
         return replaceTrigger;
     }
 
-    /**
-     * @param replaceTrigger the replace trigger
-     */
-    public void setReplaceTrigger(String replaceTrigger) {
+    public void setReplaceTrigger(Operator replaceTrigger) {
         this.replaceTrigger = replaceTrigger;
     }
 
-    private String rerollTrigger;
-    private String replaceTrigger;
-
-    /**
-     * The constructor.
-     */
-    public RollArguments() {
-        reroll = -1;
-        replace = -1;
-        replaceValue = 0;
-        advantage = 0;
-        rerollTrigger = "";
-        replaceTrigger = "";
+    public List<String> getFlags() {
+        return ifFlagName;
     }
+
+    public void setAddIfFlagName(String ifFlagName) {
+        this.ifFlagName.add(ifFlagName);
+    }
+
+    public List<Condition> getConditions() {
+        return conditions;
+    }
+
+    public Operator getSuccessTrigger() {
+        return successTrigger;
+    }
+
+    public void setSuccessTrigger(Operator successTrigger) {
+        this.successTrigger = successTrigger;
+    }
+
+    public int getSuccessValue() {
+        return successValue;
+    }
+
+    public void setSuccessValue(int successValue) {
+        this.successValue = successValue;
+    }
+
+
+    public int getKeepHighest() {
+        return keepHighest;
+    }
+
+    public void setKeepHighest(int keepHighest) {
+        this.keepHighest = keepHighest;
+    }
+
+    public int getKeepLowest() {
+        return keepLowest;
+    }
+
+    public void setKeepLowest(int keepLowest) {
+        this.keepLowest = keepLowest;
+    }
+
+    public int getDropHighest() {
+        return dropHighest;
+    }
+
+    public void setDropHighest(int dropHighest) {
+        this.dropHighest = dropHighest;
+    }
+
+    public int getDropLowest() {
+        return dropLowest;
+    }
+
+    public void setDropLowest(int dropLowest) {
+        this.dropLowest = dropLowest;
+    }
+
+    public List<String> calculateConditions(DicePool pool) {
+        List<String> metConditions = new LinkedList<>();
+        for (Condition condition : conditions) {
+            condition.calculate(pool);
+            if (condition.isResult()) metConditions.add(condition.getFlag());
+        }
+        return metConditions;
+    }
+
 }

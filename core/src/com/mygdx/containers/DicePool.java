@@ -11,6 +11,7 @@ import com.mygdx.managers.UIManager;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -24,6 +25,7 @@ public class DicePool extends TextButton {
     private List<DiceResult> diceResults;
     private float modifier;
     private float result;
+    private String operator;
 
     /**
      * The constructor method
@@ -66,31 +68,60 @@ public class DicePool extends TextButton {
 
     public static DicePool createFromString(String string) {
         //String format for dice rolls [[hover string]--[final result]]@[mod1]@[result 2]@[mod2]@...@[result n]@[modn]
-        DicePool newPool = new DicePool();
-        String[] parts = string.split("@");
-        for (int i = 0; i < parts.length - 1; i += 2) {
-            String[] format = parts[i].split("--");
-            String hoverText = format[0];
-            int finalVal = Integer.parseInt(format[1]);
-            float mod = Float.parseFloat(parts[i + 1]);
-            DiceResult result = new DiceResult(hoverText, finalVal);
-            newPool.addDice(result);
-            newPool.addMod(mod);
-        }
-        return newPool;
+        return null;
     }
 
     /**
      * This method adds a new dice to the pool
      *
-     * @param dice The dice to add
+     * @param number the number of dice
+     * @param size the number of sides of each dice
+     * @param arguments the arguments for the roll
      */
-    public void addDice(DiceResult dice) {
-        diceResults.add(dice);
-        result += dice.getFinalResult();
-        DecimalFormat df = new DecimalFormat("0", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
-        df.setMaximumFractionDigits(340); //340 = DecimalFormat.DOUBLE_FRACTION_DIGITS
-        this.setText(df.format(result));
+    public void addDice(int number, int size, RollArguments arguments, List<String> flagsMet) {
+        //Check for an if parameter
+        for (String flagName : arguments.getFlags()) {
+            if (!flagsMet.contains(flagName)) {
+                sun.security.ssl.Debug.println("Add dice", "Failed to meet condition");
+            }
+        }
+        DiceResult[] dice = new DiceResult[number];
+        for (int i = 0; i < number; i++) {
+            //Roll the dice
+            dice[i] = new DiceResult(arguments, size);
+        }
+        //Drop and keep dice
+        Arrays.sort(dice, (d1, d2) -> d1.getFinalResult() - d2.getFinalResult());
+
+        for (DiceResult die : dice) {
+            sun.security.ssl.Debug.println("Dice result:", die.getHistory());
+        }
+
+        sun.security.ssl.Debug.println("Dice result:", "Drop results");
+        //Drop lowest
+        if (arguments.getDropLowest() > dice.length) arguments.setDropLowest(dice.length);
+        if (arguments.getDropLowest() > 0) dice = Arrays.copyOfRange(dice, arguments.getDropLowest(), dice.length);
+
+        //Drop Highest
+        if (arguments.getDropHighest() > dice.length) arguments.setDropHighest(dice.length);
+        if (arguments.getDropHighest() > 0)
+            dice = Arrays.copyOfRange(dice, 0, dice.length - arguments.getDropHighest());
+
+        //Keep lowest
+        if (arguments.getKeepLowest() > dice.length) arguments.setKeepLowest(dice.length);
+        if (arguments.getKeepLowest() > 0) dice = Arrays.copyOfRange(dice, 0, arguments.getKeepLowest());
+
+        //Keep Highest
+        if (arguments.getKeepHighest() > dice.length) arguments.setKeepHighest(dice.length);
+        if (arguments.getKeepHighest() > 0)
+            dice = Arrays.copyOfRange(dice, dice.length - arguments.getKeepHighest(), dice.length);
+
+
+        //Check any conditions and mark flags
+        arguments.calculateConditions(this);
+        for (DiceResult die : dice) {
+            sun.security.ssl.Debug.println("Dice result:", die.getHistory());
+        }
     }
 
     /**
@@ -118,5 +149,13 @@ public class DicePool extends TextButton {
 
     public float getMod() {
         return modifier;
+    }
+
+    public String getOperator() {
+        return operator;
+    }
+
+    public void setOperator(String operator) {
+        this.operator = operator;
     }
 }

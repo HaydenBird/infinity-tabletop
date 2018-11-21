@@ -83,6 +83,7 @@ public class DicePool extends TextButton {
         for (String flagName : arguments.getFlags()) {
             if (!flagsMet.contains(flagName)) {
                 sun.security.ssl.Debug.println("Add dice", "Failed to meet condition");
+                return;
             }
         }
         DiceResult[] dice = new DiceResult[number];
@@ -92,10 +93,6 @@ public class DicePool extends TextButton {
         }
         //Drop and keep dice
         Arrays.sort(dice, (d1, d2) -> d1.getFinalResult() - d2.getFinalResult());
-
-        for (DiceResult die : dice) {
-            sun.security.ssl.Debug.println("Dice result:", die.getHistory());
-        }
 
         sun.security.ssl.Debug.println("Dice result:", "Drop results");
         //Drop lowest
@@ -120,7 +117,7 @@ public class DicePool extends TextButton {
         //Check any conditions and mark flags
         arguments.calculateConditions(this);
         for (DiceResult die : dice) {
-            sun.security.ssl.Debug.println("Dice result:", die.getHistory());
+            result += die.getFinalResult();
         }
     }
 
@@ -157,5 +154,9 @@ public class DicePool extends TextButton {
 
     public void setOperator(String operator) {
         this.operator = operator;
+    }
+
+    public float getTotal() {
+        return result;
     }
 }

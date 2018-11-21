@@ -4,6 +4,7 @@ import com.mygdx.containers.*;
 import sun.security.ssl.Debug;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -22,25 +23,45 @@ public class RollManager {
      */
 
     public ChatMessage parseMessage(String newMessage) {
-        String pattern = "\\[[^\\]\\[]+\\]"; //this regex pattern matches for things encased in braces
+        String pattern = "([^\\[\\]]*)(\\[[^\\]\\[]+\\])?"; //this regex pattern matches for things encased in braces
         Pattern r = Pattern.compile(pattern);
         Matcher m = r.matcher(newMessage);
         List<String> rollCommands = new LinkedList<>();
+        List<MessageComponent> message = new LinkedList<>();
         while (m.find()) {
-            rollCommands.add(m.group(0));
+            Debug.println("Regex found", "Group 0: " + m.group(0) + " Group 1: " + m.group(1) + " Group 2: " + m.group(2));
+            MessageComponent text = new MessageComponent();
+            message.add(text);
+            if (m.group(2) != null) {
+                MessageComponent roll = new MessageComponent();
+                message.add(roll);
+                rollCommands.add(m.group(2));
+            }
+            text.addString(m.group(1));
+
         }
         List<String> text = new LinkedList<>(Arrays.asList(newMessage.split("\\[[^\\]\\[]+\\]")));
         try {
-            ChatMessage message = parseRollCommands(rollCommands);
+            List<RollContainer> rollContainers = parseRollCommands(rollCommands);
+            ChatMessage newChatMessage = makeChatMessage(rollContainers, message);
             //NetworkManager.sendCommand(message.getNetworkCommand());
-            return message;
+            return newChatMessage;
         } catch (IncorrectFormattingError e) {
             Debug.println("Formatting error", "Debug");
-            ChatMessage message = new ChatMessage(text, EngineManager.getCurrentPlayer(), null, EngineManager.getSkin());
             //NetworkManager.sendCommand(message.getNetworkCommand());
-            return message;
+            return null;
         }
 
+    }
+
+    private ChatMessage makeChatMessage(List<RollContainer> rollContainers, List<MessageComponent> message) {
+        Iterator<RollContainer> rollContainerIterator = rollContainers.iterator();
+        for (MessageComponent messageComponent : message) {
+            if (messageComponent.getStringOrContainer() == RollContainer.class && rollContainerIterator.hasNext()) {
+                messageComponent.addRollContainer(rollContainerIterator.next());
+            }
+        }
+        return new ChatMessage(EngineManager.getCurrentPlayer(), NetworkManager.getPlayers(), EngineManager.getSkin(), message);
     }
 
     /**
@@ -62,7 +83,7 @@ public class RollManager {
      * _rep:[< or > or =]:x:y    - replace all rolls greater than or less than or equal to X with Y
      * <p>
      * _success:[< or > or =]:x   - count each dice that is in the range
-     * _condition:[condition]:value:flagname   -   if a conditiion is met, set the flag named
+     * _condition:[condition]:operator:value:flagname   -   if a conditiion is met, set the flag named
      *<p>
      *  Conditions:
      *          total:[=, >, <]:[value]
@@ -77,7 +98,7 @@ public class RollManager {
      * @return the roll container that has the rolls for the message
      * @throws IncorrectFormattingError This error means the formatting of a roll command was wrong
      */
-    private ChatMessage parseRollCommands(List<String> rollCommands) throws IncorrectFormattingError {
+    private List<RollContainer> parseRollCommands(List<String> rollCommands) throws IncorrectFormattingError {
         try {
             List<RollContainer> rollContainers = new LinkedList<>();
             List<String> flagsMet = new LinkedList<>();
@@ -127,8 +148,9 @@ public class RollManager {
 
 
             //Create  a chat message out of the containers
-            return null;
+            return rollContainers;
         } catch (Exception e) {
+            e.printStackTrace();
             throw new IncorrectFormattingError();
         }
     }
@@ -175,10 +197,10 @@ public class RollManager {
             //condition casea
             case "condition":
                 Condition newCondition = new Condition(Condition.typeFromString(parameterParts[1]), Operator.fromString(parameterParts[2]),
-                        parameterParts[3], Float.parseFloat(parameterParts[4]));
+                        parameterParts[4], Float.parseFloat(parameterParts[3]));
                 rollArguments.getConditions().add(newCondition);
                 Debug.println("Parse roll command", "A condition has been set, if " + parameterParts[1] + " is " + parameterParts[2]
-                        + " " + parameterParts[3] + "then set flag" + parameterParts[4]);
+                        + " " + parameterParts[3] + " then set flag with the name" + parameterParts[4]);
                 break;
             //if case
             case "if":

@@ -7,7 +7,6 @@ import com.badlogic.gdx.net.ServerSocket;
 import com.badlogic.gdx.net.ServerSocketHints;
 import com.badlogic.gdx.net.Socket;
 import com.badlogic.gdx.net.SocketHints;
-import com.mygdx.containers.ChatMessage;
 import com.mygdx.containers.Command;
 import com.mygdx.containers.DicePool;
 import com.mygdx.containers.RollContainer;
@@ -360,8 +359,8 @@ public class NetworkManager {
         }
         Debug.println("Handle chat", "Got recipients");
         RollContainer rollContainer = new RollContainer(rolls);
-        ChatMessage chatMessage = new ChatMessage(messages, from, recipients, rollContainer, EngineManager.getSkin());
-        UIManager.addChat(chatMessage);
+        //ChatMessage chatMessage = new ChatMessage(messages, from, recipients, rollContainer, EngineManager.getSkin());
+        //UIManager.addChat(chatMessage);
 
         propagateCommand(command);
 

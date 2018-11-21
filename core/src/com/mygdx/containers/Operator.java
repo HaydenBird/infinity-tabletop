@@ -57,4 +57,8 @@ public enum Operator {
                 return false;
         }
     }
+
+    public static float performCalculation(String operator, float firstValue, float secondValue) {
+        return firstValue + secondValue; //TODO operators
+    }
 }

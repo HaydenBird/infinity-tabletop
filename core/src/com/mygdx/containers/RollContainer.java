@@ -30,4 +30,11 @@ public class RollContainer {
         this.rollResults = rollResults;
     }
 
+    public float getRollResult() {
+        float initial = 0;
+        for (DicePool dicePool : rollResults) {
+            initial = Operator.performCalculation(dicePool.getOperator(), initial, dicePool.getTotal());
+        }
+        return initial;
+    }
 }

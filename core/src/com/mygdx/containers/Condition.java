@@ -73,27 +73,27 @@ public class Condition {
     }
 
     private boolean checkSuccess(DicePool pool) {
-        return false;
+        return true;
     }
 
     private boolean checkAtLeastOne(DicePool pool) {
-        return false;
+        return true;
     }
 
     private boolean checkAllDice(DicePool pool) {
-        return false;
+        return true;
     }
 
     private boolean checkLowestDice(DicePool pool) {
-        return false;
+        return true;
     }
 
     private boolean checkHighestDice(DicePool pool) {
-        return false;
+        return true;
     }
 
     private boolean checkTotal(DicePool pool) {
-        return false;
+        return true;
     }
 
     public void calculate(DicePool pool) {

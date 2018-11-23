@@ -181,6 +181,7 @@ public class RollManager {
     private void handleParameter(RollArguments rollArguments, String parameter) {
         String[] parameterParts = parameter.split(":");
         switch (parameterParts[0]) {
+            k
             //Advantage cases
             case "a":
                 rollArguments.setAdvantage(rollArguments.getAdvantage() + 1);

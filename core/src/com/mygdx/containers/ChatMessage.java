@@ -16,9 +16,7 @@ public class ChatMessage extends Table {
     private Date timeStamp;
     private List<Player> recipients;
     private Player sender;
-    private List<String> message;
-    private RollContainer rolls;
-    private int messageLength;
+    private List<MessageComponent> message;
     private HorizontalGroup group;
 
     public ChatMessage(Player sender, List<Player> recipients, Skin skin, List<MessageComponent> components) {
@@ -26,6 +24,7 @@ public class ChatMessage extends Table {
         this.recipients = recipients;
         if (this.recipients == null) this.recipients = new LinkedList<>();
         this.sender = sender;
+        this.message = components;
         buildAppearance(components);
     }
 
@@ -58,9 +57,11 @@ public class ChatMessage extends Table {
     }
 
     public Command getNetworkCommand() {
-        //chat [number of messages] [number of rolls] [message 1] ... [message n] [roll 1] ... [rolls n] [style] [from] [number of recipients] [recipient id 1] .. [recipient id 2] [message id]
+        //chat [number of messages] [number of message components] [message 1] ... [message n] [style] [from] [number of recipients] [recipient id 1] .. [recipient id n] [message id]
         List<String> args = new LinkedList<>();
         //TODO chat network commands
+        args.add(message.size() + "");
+
         Command command = new Command(Command.CommandType.CHAT, args, null);
         return command;
 

@@ -51,4 +51,15 @@ public class RollContainer extends TextButton {
         return (float) result;
 
     }
+
+    @Override
+    public String toString() {
+        String s = "roll/#$/";
+        for (DicePool dicePool : rollResults) {
+            s += dicePool.toString();
+            s += "/#$/";
+        }
+        s += "end";
+        return s;
+    }
 }

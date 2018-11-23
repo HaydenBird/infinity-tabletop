@@ -160,4 +160,14 @@ public class DicePool extends TextButton {
     public float getTotal() {
         return result;
     }
+
+    @Override
+    public String toString() {
+        String s = "" + diceResults.size() + "/##/";
+        for (DiceResult die : diceResults) {
+            s += "" + die.getFinalResult() + "/##/" + die.getHistory() + "/##/";
+        }
+        s += "" + modifier;
+        return s;
+    }
 }

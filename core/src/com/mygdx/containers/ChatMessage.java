@@ -45,6 +45,7 @@ public class ChatMessage extends Table {
             } else {
                 Label label = new Label((String) component.getMessageComponent(), EngineManager.getSkin());
                 group.addActor(label);
+                sun.security.ssl.Debug.println("Chat message", "Has label with text " + label.getText());
             }
         }
 

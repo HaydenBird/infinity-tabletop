@@ -40,8 +40,6 @@ public class RollContainer extends TextButton {
         float initial = 0;
         String expressionString = "";
         for (DicePool dicePool : rollResults) {
-            expressionString += dicePool.getOperator();
-            expressionString += " ";
             expressionString += dicePool.getTotal() + " ";
         }
         sun.security.ssl.Debug.println("Roll container", "Expression is: " + expressionString);

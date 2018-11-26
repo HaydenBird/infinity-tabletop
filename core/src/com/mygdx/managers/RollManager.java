@@ -4,8 +4,6 @@ import com.mygdx.containers.*;
 import org.mariuszgromada.math.mxparser.Expression;
 import sun.security.ssl.Debug;
 
-import java.util.Arrays;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -24,50 +22,54 @@ public class RollManager {
      */
 
     public ChatMessage parseMessage(String newMessage) {
-        String pattern = "([^\\[\\]]*)(\\[[^\\]\\[]+\\])?"; //this regex pattern matches for things encased in braces
-        Pattern r = Pattern.compile(pattern);
-        Matcher m = r.matcher(newMessage);
-        List<String> rollCommands = new LinkedList<>();
-        List<MessageComponent> message = new LinkedList<>();
-        while (m.find()) {
-            Debug.println("Regex found", "Group 0: " + m.group(0) + " Group 1: " + m.group(1) + " Group 2: " + m.group(2));
-            MessageComponent text = new MessageComponent();
-            message.add(text);
-            if (m.group(2) != null) {
-                MessageComponent roll = new MessageComponent();
-                message.add(roll);
-                rollCommands.add(m.group(2));
+        Debug.println("Parse message", "Begin");
+        Matcher bracesMatcher = Pattern.compile("(\\[([^\\[\\]]+)\\])?([^\\[\\]]*)?").matcher(newMessage);
+        List<MessageComponent> messageComponents = new LinkedList<>();
+        while (bracesMatcher.find()) {
+            if (bracesMatcher.group(0) == null || bracesMatcher.group(0).isEmpty()) continue;
+            Debug.println("Parse message", "Found message in brackets as follows: " + bracesMatcher.group(0));
+            if (bracesMatcher.group(2) != null) {
+                Matcher diceRollFinder = Pattern.compile("(roll\\(([^,]+),([^\\)]+)\\))(_[^\\)\\s]+)?").matcher(bracesMatcher.group(2));
+                RollContainer container = new RollContainer();
+                while (diceRollFinder.find()) {
+                    if (diceRollFinder.group(0) == null || diceRollFinder.group(0).isEmpty()) continue;
+                    Debug.println("Parse message", "Found dice command as follows: " + diceRollFinder.group(0));
+                    Debug.println("Parse message", "Number of dice is as follows: " + diceRollFinder.group(2));
+                    Debug.println("Parse message", "Size of dice is as follows: " + diceRollFinder.group(3));
+                    RollArguments arguments;
+                    if (diceRollFinder.group(4) != null) {
+                        Debug.println("Parse message", "Arguments for the roll are as follows: " + diceRollFinder.group(4));
+                        arguments = findArguments(diceRollFinder.group(4));
+                    } else {
+                        Debug.println("Parse message", "No arguments found");
+                        arguments = new RollArguments();
+                    }
+                    int number = Math.round((float) doMath(diceRollFinder.group(2)));
+                    int sides = Math.round((float) doMath(diceRollFinder.group(3)));
+                    DicePool dicePool = new DicePool();
+                    List<String> flagsMet = new LinkedList<>();
+                    dicePool.addDice(number, sides, arguments, flagsMet);
+                    flagsMet.addAll(arguments.getFlags());
+                    container.addDicePool(dicePool);
+                    MessageComponent messageComponent = new MessageComponent();
+                    messageComponent.addRollContainer(container);
+                    messageComponents.add(messageComponent);
+                }
             }
-            text.addString(m.group(1));
 
-        }
-        List<String> text = new LinkedList<>(Arrays.asList(newMessage.split("\\[[^\\]\\[]+\\]")));
-        try {
-            List<RollContainer> rollContainers = parseRollCommands(rollCommands);
-            ChatMessage newChatMessage = makeChatMessage(rollContainers, message);
-            //NetworkManager.sendCommand(message.getNetworkCommand());
-            return newChatMessage;
-        } catch (IncorrectFormattingError e) {
-            Debug.println("Formatting error", "Debug");
-            //NetworkManager.sendCommand(message.getNetworkCommand());
-            return null;
-        }
-
-    }
-
-    private ChatMessage makeChatMessage(List<RollContainer> rollContainers, List<MessageComponent> message) {
-        Iterator<RollContainer> rollContainerIterator = rollContainers.iterator();
-        for (MessageComponent messageComponent : message) {
-            if (messageComponent.getStringOrContainer() == RollContainer.class && rollContainerIterator.hasNext()) {
-                messageComponent.addRollContainer(rollContainerIterator.next());
+            if (bracesMatcher.group(3) != null || !bracesMatcher.group(3).isEmpty()) {
+                MessageComponent messageComponent = new MessageComponent();
+                Debug.println("Parse message", "String found: " + bracesMatcher.group(3));
+                messageComponent.addString(bracesMatcher.group(3));
+                messageComponents.add(messageComponent);
             }
         }
-        return new ChatMessage(EngineManager.getCurrentPlayer(), NetworkManager.getPlayers(), EngineManager.getSkin(), message);
+        return new ChatMessage(EngineManager.getCurrentPlayer(), NetworkManager.getPlayers(), EngineManager.getSkin(), messageComponents);
     }
 
     /**
      * Roll commands come in the following forms:
-     * [number of dice 1]d[sides of dice 1]_[parameter 1]_..._[parameter n]+...+[number of dice n]d[dice size n]+modifier
+     * roll(number, sides)[arguments]
      * <p>
      * Parameters:
      * <p>
@@ -95,74 +97,10 @@ public class RollManager {
      *<p>
      * -if:flagname     -   only perform this command if the named flag is flagged
      *
-     * @param rollCommands the split list of commands in braces
+     *
      * @return the roll container that has the rolls for the message
      * @throws IncorrectFormattingError This error means the formatting of a roll command was wrong
      */
-    private List<RollContainer> parseRollCommands(List<String> rollCommands) throws IncorrectFormattingError {
-        try {
-            List<RollContainer> rollContainers = new LinkedList<>();
-            List<String> flagsMet = new LinkedList<>();
-            for (String rollCommand : rollCommands) {
-                Debug.println("Parse roll command", "Roll command: " + rollCommand);
-                RollContainer container = new RollContainer();
-                rollCommand = rollCommand.substring(1, rollCommand.length() - 1);
-                Debug.println("Parse roll command", "Stripped Roll command: " + rollCommand);
-                //Build the regex
-                Pattern rollPartPattern = Pattern.compile("([\\/\\+\\-\\*]?)\\s*(\\d+|\\([^\\(\\)]*\\)\\b)d?(\\b\\([^\\(\\)]*\\)|[^\\/\\+\\*\\-\\(\\)]*)");
-                Matcher rollPartMatcher = rollPartPattern.matcher(rollCommand);
-                //Search and find all groupings of dice and what operation they are performing ( + - * /)
-                while (rollPartMatcher.find()) { //For each grouping
-                    if (rollPartMatcher.group(2) == null) {
-                        Debug.println("Parse roll command", "Matcher found nothing");
-                        continue;
-                    }
-                    Debug.println("Parse roll command", "Regex match, group 1: " + rollPartMatcher.group(1) + ", group 2: " + rollPartMatcher.group(2));
-                    DicePool dicePool = new DicePool();
-                    //Find the operator
-                    String operator = rollPartMatcher.group(1);
-                    if ((operator == null)) {
-                        dicePool.setOperator("+");
-                    } else {
-                        dicePool.setOperator(operator);
-                    }
-                    //Find the dice number and size
-                    String[] parameters = rollPartMatcher.group(3).split("_");
-                    parameters = Arrays.copyOfRange(parameters, 1, parameters.length);
-                    if (rollPartMatcher.group(3) == null) {
-                        if (rollPartMatcher.group(2) != null) {
-                            dicePool.addMod((float) doMath(rollPartMatcher.group(2)));
-                        } else {
-                            continue;
-                        }
-                    } else {
-
-                        Debug.println("Parse roll command", "dice number: " + rollPartMatcher.group(2) + ", size: " + rollPartMatcher.group(3));
-                        int diceNumber = (int) (doMath((!rollPartMatcher.group(2).trim().isEmpty()) ? rollPartMatcher.group(2) : "1"));
-                        int diceSize = (int) (doMath((!rollPartMatcher.group(3).trim().isEmpty()) ? rollPartMatcher.group(3) : "1"));
-                        //find all the parameters
-                        Debug.println("Parse roll command", "Parameter count: " + parameters.length);
-                        RollArguments rollArguments = findArguments(parameters);
-                        dicePool.addDice(diceNumber, diceSize, rollArguments, flagsMet);
-                        flagsMet.addAll(rollArguments.calculateConditions(dicePool));
-                    }
-
-
-                    //Do something with the dice pool
-                    container.addDicePool(dicePool);
-
-                }
-                rollContainers.add(container);
-            }
-
-
-            //Create  a chat message out of the containers
-            return rollContainers;
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new IncorrectFormattingError();
-        }
-    }
 
     private double doMath(String equation) {
         Expression ex = new Expression(equation);
@@ -170,18 +108,19 @@ public class RollManager {
         return ex.calculate();
     }
 
-    private RollArguments findArguments(String[] listArguments) {
+    private RollArguments findArguments(String parameters) {
         RollArguments rollArguments = new RollArguments();
-        for (String parameter : listArguments) {
+        String[] parametersSplit = parameters.split("_");
+        for (String parameter : parametersSplit) {
             handleParameter(rollArguments, parameter);
         }
         return rollArguments;
     }
 
+
     private void handleParameter(RollArguments rollArguments, String parameter) {
         String[] parameterParts = parameter.split(":");
         switch (parameterParts[0]) {
-            k
             //Advantage cases
             case "a":
                 rollArguments.setAdvantage(rollArguments.getAdvantage() + 1);

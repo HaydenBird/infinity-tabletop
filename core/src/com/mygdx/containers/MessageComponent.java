@@ -12,6 +12,7 @@ public class MessageComponent {
     }
 
     public void addString(String string) {
+        messageComponent = string;
         isRollContainer = false;
     }
 
